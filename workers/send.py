@@ -1,6 +1,6 @@
 from .bus import bus
 from telegram import Message, InlineKeyboardButton, InlineKeyboardMarkup
-
+from .loader import *
 
 class Sender:
 
@@ -20,18 +20,43 @@ class Sender:
         return sent
 
 
-    async def edit(self, *, sent_message:Message=None, text:str="", buttons=None, parse_mode=None, **kwargs):
-
-        if not sent_message:
-            return None
-
+    async def edit(
+        self, 
+        *, 
+        sent_message: Message = None, 
+        chat_id: int = None, 
+        message_id: int = None, 
+        text: str = "", 
+        buttons = None, 
+        parse_mode = None, 
+        **kwargs
+    ):
         reply_markup = self._build_keyboard(buttons)
 
-        return await sent_message.edit_text(
-            text=text,
-            reply_markup=reply_markup,
-            parse_mode=parse_mode
-        )
+        # حالت اول: شیء پیام ارسال شده است
+        if sent_message:
+            return await sent_message.edit_text(
+                text=text,
+                reply_markup=reply_markup,
+                parse_mode=parse_mode,
+                
+            )
+        
+        # حالت دوم: شناسه پیام و شناسه چت ارسال شده‌اند
+        elif chat_id and message_id:
+            # فرض بر این است که self.bot یا self.context.bot در کلاس شما در دسترس است
+            return await app.bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=message_id,
+                text=text,
+                reply_markup=reply_markup,
+                parse_mode=parse_mode,
+            )
+        
+        else:
+            # اگر اطلاعات کافی برای ویرایش وجود نداشت
+            raise ValueError("شما باید یا sent_message یا هر دو مقدار chat_id و message_id را پاس بدهید.")
+
 
 
     def _build_keyboard(self, buttons):
@@ -55,7 +80,7 @@ class Sender:
                 rows.append([
                     InlineKeyboardButton(
                         text=b.get("text"),
-                        callback_data=b.get("callback_data")
+                        callback_data=b.get("callback")
                     )
                 ])
 

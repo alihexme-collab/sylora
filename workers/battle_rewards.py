@@ -26,9 +26,6 @@ class BattleRewards:
         async with get_db() as session:
             query = update(CharacterStats).where(CharacterStats.character_id == self.hero_stats.character_id).values(
                 exp=self.hero_stats.exp + gained_xp,
-                energy=self.hero["energy"],
-                mana=self.hero["mana"],
-                hp=self.hero["hp"]
             )
             await session.execute(query)
         await bus.emit(

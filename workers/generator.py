@@ -15,7 +15,7 @@ class Generator:
             f"نام:   {character.name:<10} | سن: {character.age}\n"
             f"سطح:   {stats.level:<10} | پول: {stats.gold}\n"
             f"قدرت:  {stats.strength:<10} | سرعت: {stats.speed}\n"
-            f"مقاومت: {stats.defense:<10} | جان: {stats.hp}\n"
+            f"استقامت: {stats.defense:<10} | جان: {stats.hp}\n"
             f"هوش:   {stats.intelligence:<10} | شانس: {stats.luck}\n"
             f"انرژی:  {stats.energy:<10} | مانا: {stats.mana}\n"
             f"اعتبار: {stats.hunting_points:<10} | دانش سیاه: {stats.black_knowledge_level}"
@@ -48,7 +48,12 @@ class Generator:
         winner = data.get("winner")
         loser = data.get("loser")
         details = data.get("details")
-
+        location = data.get("location")
+        hero_stats=data.get("hero_stats")
+        enemy_stats=data.get("enemy_stats")
+        hero = data.get("hro")
+        enemy = data.get("emy")
+        count = data.get("enemy_count")
         sent_message = await bus.emit(
             "SEND",
             player_id=chat_id,
@@ -64,7 +69,13 @@ class Generator:
             "combat",
             winner=winner,
             loser=loser,
-            data=details
+            data=details,
+            location=location,
+            hero_stats=hero_stats,
+            enemy_stats=enemy_stats,
+            hero=hero,
+            enemy=enemy,
+            enemy_count=count
         ):
             full_text += part
 
@@ -128,35 +139,71 @@ class Generator:
         if costs.get("strength"):
             text += f"""
 💪 قدرت: {stats.strength}  | هزینه ارتقا: {costs["strength"]} XP"""
-            buttons.append({"text": "💪", "callback": "sstrength", "cost": costs["strength"]})
+            buttons.append({"text": "💪", "callback": f"upgrade:strength-{costs["strength"]}"})
 
         if costs.get("speed"):
             text += f"""
 🏃 سرعت: {stats.speed}  | هزینه ارتقا: {costs["speed"]} XP"""
-            buttons.append({"text": "🏃", "callback": "speed", "cost": costs["speed"]})
+            buttons.append({"text": "🏃", "callback": f"upgrade:speed-{costs["speed"]}"})
 
         if costs.get("defense"):
             text += f"""
-🛡 دفاع: {stats.defense}   | هزینه ارتقا: {costs["defense"]} XP"""
-            buttons.append({"text": "🛡", "callback": "defense", "cost": costs["defense"]})
+🛡 استقامت: {stats.defense}   | هزینه ارتقا: {costs["defense"]} XP"""
+            buttons.append({"text": "🛡", "callback": f"upgrade:defense-{costs["defense"]}"})
 
         if costs.get("intelligence"):
             text += f"""
 🧠 هوش: {stats.intelligence}    | هزینه ارتقا: {costs["intelligence"]} XP"""
-            buttons.append({"text": "🧠", "callback": "intelligence", "cost": costs["intelligence"]})
+            buttons.append({"text": "🧠", "callback": f"upgrade:intelligence-{costs["intelligence"]}"})
 
         if costs.get("luck"):
             text += f"""
 🍀 شانس: {stats.luck}    | هزینه ارتقا: {costs["luck"]} XP"""
-            buttons.append({"text": "🍀", "callback": "luck", "cost": costs["luck"]})
+            buttons.append({"text": "🍀", "callback": f"upgrade:luck-{costs["luck"]}"})
         print("SEND:::")
-        await bus.emit(
+        sent = await bus.emit(
             "SEND",
             text=text,
             buttons=buttons,
             message=message,
             player_id=chat_id
         )
+        for btn in buttons:
+            btn["callback"] += f"?••?/{sent.message_id}"
+
+        await bus.emit(
+            "EDIT",
+            text=text,
+            buttons=buttons,
+            sent_message=sent,
+            player_id=chat_id
+        )
+
+    async def generate_update(self, **data):
+        chat_id=data.get("chat_id")
+        message=data.get("message")
+        stat_name=data.get("stat_name").replace("strength", "قدرت").replace("speed", "سرعت").replace("defense", "استقامت").replace("intelligence", "هوش").replace("luck", "شانس")
+        price=data.get("price")
+        curr=data.get("curr")
+
+        text = f"""✅ ارتقا با موفقیت انجام شد!
+
+ویژگی «{stat_name}» با موفقیت افزایش یافت.
+{price} XP از حساب شما کسر شد.
+به پیشرفت ادامه بده!
+
+{stat_name} فعلی:
+{curr}
+"""
+        await bus.emit(
+            "EDIT",
+            player_id=chat_id,
+            message_id=int(message),
+            text=text,
+            chat_id=chat_id
+        )
+        
+
 
 
 
@@ -166,3 +213,4 @@ bus.listen("GENERATE_START", gen.generate_start)
 bus.listen("GENERATE_COMBAT_STORY", gen.generate_combat_story)
 bus.listen("GENERATE_COMBAT_REWARDS", gen.generate_combat_rewards)
 bus.listen("SHOW_UPGADE_COSTS", gen.generate_upgrade_choices)
+bus.listen("GENERATE_UPDATE", gen.generate_update)

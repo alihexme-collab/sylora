@@ -1,5 +1,5 @@
 from telegram import *
-from loader import *
+from workers.loader import *
 from telegram.ext import *
 from workers import *
 
@@ -34,7 +34,7 @@ class Receive:
             message=query.message
         )
 
-    async def upgrade(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def upgrade_request(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
         await query.answer()
 
@@ -46,6 +46,37 @@ class Receive:
             chat_id=chat_id,
             message=query.message
         )
+
+    async def update(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        query = update.callback_query
+        await query.answer()
+        chat_id = query.message.chat_id
+
+        await bus.emit(
+            "UPDATE",
+            player_id=chat_id,
+            chat_id=chat_id,
+            query=query
+        )
+
+    async def choose_enemy(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        query = update.callback_query
+        await query.answer()
+        chat_id = query.message.chat_id
+        data = query.data.split(':')
+        _, enemy_type, enemy_id, character_id = data
+        await bus.emit(
+            "COMBAT",
+            player_id=chat_id,
+            chat_id=chat_id,
+            enemy_id=enemy_id,
+            enemy_type=enemy_type,
+            enemy_count=1,
+            message=query.message,
+            character_id=character_id
+        )
+
+    
 
 
 receive = Receive()
@@ -68,7 +99,21 @@ app.add_handler(
 
 app.add_handler(
     CallbackQueryHandler(
-        receive.upgrade,
+        receive.upgrade_request,
         pattern="^ارتقای آمار$"
+    )
+)
+
+app.add_handler(
+    CallbackQueryHandler(
+        receive.update,
+        pattern="^upgrade:"
+    )
+)
+
+app.add_handler(
+    CallbackQueryHandler(
+        receive.choose_enemy,
+        pattern="^fight:"
     )
 )

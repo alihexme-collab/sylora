@@ -6,3 +6,5 @@ from .send import *
 from .find_enemy import *
 from .battle_rewards import *
 from .upgrade_stats import *
+from .update import *
+from .loader import *

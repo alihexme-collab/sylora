@@ -6,20 +6,30 @@ import random as rnd
 
 class Combat:
     async def start(self, **data):
-        player = data.get("player")
-        enemy = data.get("enemy")
+        enemy_id = data.get("enemy_id")
         message = data.get("message")
         chat_id = data.get("chat_id") or getattr(player, "telegram_id", None)
         enemy_type = data.get("enemy_type", "npc")
         enemy_count = data.get("enemy_count", 1)
-        hero = data.get("hero")
+        character_id= data.get("character_id")
+        player_id = data.get("player_id")
 
-        if not player or not enemy:
-            return
+        async with get_db() as session:
+            query=select(Character).where(Character.character_id == character_id)
+            result = await session.execute(query)
+            hero= result.scalar_one_or_none()
 
+            if enemy_type == 'npc':
+                query=select(Npc).where(Npc.npc_id == enemy_id)
+            elif enemy_type == "enemy":
+                query=select(Enemy).where(Enemy.enemy_id == enemy_id)
+            else:
+                query=select(Character).where(Character.character_id == enemy_id)
+            result = await session.execute(query)
+            emy= result.scalar_one_or_none()
         session = CombatSession(
-            player=player,
-            enemy=enemy,
+            player_id=player_id,
+            enemy=emy,
             hero=hero,
             message=message,
             chat_id=chat_id,
@@ -31,8 +41,7 @@ class Combat:
 
 
 class CombatSession:
-    def __init__(self, player, hero, enemy, message, chat_id, enemy_type="npc", enemy_count=1):
-        self.player = player
+    def __init__(self, player_id, hero, enemy, message, chat_id, enemy_type="npc", enemy_count=1):
         self.hero = hero
         self.enemy = enemy
         self.message = message
@@ -40,29 +49,29 @@ class CombatSession:
         self.enemy_type = enemy_type
         self.enemy_count = max(1, int(enemy_count or 1))
         self.details = {}
+        self.player_id = player_id
 
     async def _get_infos(self, uid: str, entity_type: str):
-        async with get_db() as session:
             if entity_type == "hero":
-                get_target = await session.execute(
+                get_target = await self.session.execute(
                     select(Character).where(Character.player_id == uid)
                 )
                 target = get_target.scalar_one_or_none()
-                get_target = await session.execute(
+                get_target = await self.session.execute(
                     select(CharacterStats).where(CharacterStats.character_id == target.character_id)
                 )
                 target = get_target.scalar_one_or_none()
                 return target, None, None
 
             if entity_type == "character":
-                get_target = await session.execute(
+                get_target = await self.session.execute(
                     select(CharacterStats).where(CharacterStats.character_id == uid)
                 )
                 target = get_target.scalar_one_or_none()
                 return target, None, None
 
             if entity_type == "npc":
-                get_target = await session.execute(
+                get_target = await self.session.execute(
                     select(NpcStats).where(NpcStats.npc_id == uid)
                 )
                 target = get_target.scalar_one_or_none()
@@ -74,8 +83,8 @@ class CombatSession:
                     Skill.skill_id == uid.replace("npc", "skill")
                 )
 
-                item_result = await session.execute(get_target_item)
-                skill_result = await session.execute(get_target_skill)
+                item_result = await self.session.execute(get_target_item)
+                skill_result = await self.session.execute(get_target_skill)
 
                 return (
                     target,
@@ -84,19 +93,19 @@ class CombatSession:
                 )
 
             if entity_type == "enemy":
-                get_target = await session.execute(
+                get_target = await self.session.execute(
                     select(EnemyStats).where(EnemyStats.enemy_id == uid)
                 )
                 target = get_target.scalar_one_or_none()
                 return target, None, None
 
-        return None, None, None
+            return None, None, None
            
 
     async def _set_stats(self):
-        hero_info = await self._get_infos(self.player.player_id, "hero")
+        hero_info = await self._get_infos(self.hero.player_id, "hero")
 
-        self.hero_stats, self.hero_items, self.hero_skills = hero_info
+        self.hero_stats, self.hero_items, self.hero_skills= hero_info
 
         if self.enemy_type == "character":
             enemy_uid = self.enemy.character_id
@@ -154,39 +163,45 @@ class CombatSession:
         return owner_stats, owner_damage
 
     async def calculate(self):
-        await self._set_stats()
+        async with get_db() as session:
+            self.session = session
+            await self._set_stats()
 
-        if not self.hero_stats or not self.enemy_stats:
-            return
+            if not self.hero_stats or not self.enemy_stats:
+                return
 
-        print()
-        print("-" * 100)
-        print(f"Hero: {self.hero} vs Enemy: {self.enemy} x{self.enemy_count}")
-        print("-" * 100)
+            print()
+            print("-" * 100)
+            print(f"Hero: {self.hero} vs Enemy: {self.enemy} x{self.enemy_count}")
+            print("-" * 100)
 
-        self.base_hero_energy = self.hero_stats.energy
-        self.base_hero_mana = self.hero_stats.mana
-        self.base_hero_hp = self.hero_stats.hp
+            self.base_hero_energy = self.hero_stats.energy
+            self.base_hero_mana = self.hero_stats.mana
+            self.base_hero_hp = self.hero_stats.hp
 
-        self.base_enemy_energy = self.enemy_stats.energy
-        self.base_enemy_mana = self.enemy_stats.mana
-        self.base_enemy_hp = self.enemy_stats.hp
+            self.base_enemy_energy = self.enemy_stats.energy
+            self.base_enemy_mana = self.enemy_stats.mana
+            self.base_enemy_hp = self.enemy_stats.hp
 
-        self.luck()
-        self.set_powers()
-
-        self.count = 0
-        while (
-            self.hero_stats.energy > 0
-            and self.enemy_stats.energy > 0
-            and self.hero_stats.hp > 0
-            and self.enemy_stats.hp > 0
-        ):
-            self.costs()
             self.luck()
             self.set_powers()
-            self.count += 1
 
+            self.count = 0
+            while (
+                self.hero_stats.energy > 0
+                and self.enemy_stats.energy > 0
+                and self.hero_stats.hp > 0
+                and self.enemy_stats.hp > 0
+            ):
+                await self.costs()
+                self.luck()
+                self.set_powers()
+                self.count += 1
+            if self.hero_stats.hp < 0:
+                self.hero_stats.hp = 0
+            if self.enemy_stats.hp < 0:
+                self.enemy_stats.hp = 0
+            await self.session.commit()
         winner = self.hero if self.enemy_stats.hp <= 0 else self.enemy
         loser = self.enemy if winner == self.hero else self.hero
 
@@ -198,14 +213,20 @@ class CombatSession:
             winner=winner,
             loser=loser,
             details=self.details,
-            message=self.message
+            message=self.message,
+            location=self.hero.character_path,
+            hero_stats=self.hero_stats,
+            enemy_stats=self.enemy_stats,
+            hro=self.hero.name,
+            emy=self.enemy.name,
+            enemy_count=self.enemy_count
         )
         winner = "hero" if self.enemy_stats.hp <= 0 else "enemy"
         loser = "enemy" if winner == self.hero else "hero"
 
         await bus.emit(
             "COMBAT_FINISHED",
-            player=self.player,
+            player_id=self.player_id,
             enemy=self.enemy,
             enemy_type=self.enemy_type,
             enemy_count=self.enemy_count,
@@ -264,7 +285,7 @@ class CombatSession:
             self.enemy_stats.mana,
         )
 
-    def costs(self):
+    async def costs(self):
         hero_total_power = (
             self.hero_stats.strength +
             self.hero_stats.speed +
@@ -322,10 +343,10 @@ class CombatSession:
         self.hero_stats.energy -= hero_energy_cost
         self.hero_stats.mana -= hero_mana_cost
         self.hero_stats.hp -= hero_hp_cost
-
         self.enemy_stats.energy -= enemy_energy_cost
         self.enemy_stats.mana -= enemy_mana_cost
         self.enemy_stats.hp -= enemy_hp_cost
+
 
         self.details = {
             "rounds" : self.count,

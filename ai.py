@@ -12,32 +12,56 @@ async def narrate(TYPE, **data):
             winner = data.get("winner")
             loser = data.get("loser")
             details = data.get("data")
+            location = data.get("location")
+            hero_stats=data.get("hero_stats")
+            enemy_stats=data.get("enemy_stats")
+            hero=data.get("hero")
+            enemy=data.get("enemy")
+            enemy_count=data.get("enemy_count")
             details = summarize_combat(details)
+            text = f"""
+    یک روایت کوتاه از نبرد بنویس.
+
+    قهرمان: {hero}
+    دشمن: {enemy}
+    
+    برنده: {winner.name}
+    بازنده: {loser.name}
+    مکان: {location.split('_')[1]}
+
+    قوانین:
+    - برنده حتما {winner.name} باشد
+    - بازنده حتما {loser.name} باشد
+    - لحن حماسی و اساطیری باشد
+    - 10 تا 5 جمله باشد
+    - مکان باید فارسی و معنادار ترجمه و در داستان گنجانده شود
+
+    آمار {hero}:
+    - قدرت: {hero_stats.strength}
+    - سرعت: {hero_stats.speed}
+    - استقامت: {hero_stats.defense}
+
+    آمار {enemy}:
+    - قدرت: {enemy_stats.strength}
+    - سرعت: {enemy_stats.speed}
+    - استقامت: {enemy_stats.defense}
+
+    {"تعداد دشمنان:\n" + str(enemy_count) if enemy_count > 1 else ""}
+
+    جزئیات نبرد:
+    {details}
+    """
             stream = await client.chat.completions.create(
                 model="gapgpt-qwen-3.5",
                 stream=True,
                 messages=[
                     {
                         "role": "system",
-                        "content": "تو راوی داستان‌های حماسی و اساطیری هستی."
+                        "content": "تو نویسنده و راوی صحنه های مبارزه ای در جهان دارک فانتزی جهان سیلورا هستی"
                     },
                     {
                         "role": "user",
-                        "content": f"""
-    یک روایت کوتاه از نبرد بنویس.
-
-    برنده: {winner.name}
-    بازنده: {loser.name}
-
-    قوانین:
-    - برنده حتما {winner.name} باشد
-    - بازنده حتما {loser.name} باشد
-    - لحن حماسی و اساطیری باشد
-    - 3 تا 5 جمله باشد
-
-    جزئیات نبرد:
-    {details}
-    """
+                        "content": text
                     }
                 ],
                 temperature=0.9
@@ -62,6 +86,7 @@ async def narrate(TYPE, **data):
 def summarize_combat(details: dict) -> str:
     hero = details.get("Total-hero-costs", {})
     enemy = details.get("Total-enemy-costs", {})
+    rounds = details.get("rounds")
 
     hero_hp = hero.get("hp", 0)
     hero_energy = hero.get("energy", 0)
@@ -72,7 +97,7 @@ def summarize_combat(details: dict) -> str:
     enemy_mana = enemy.get("mana", 0)
 
     description = []
-
+    description.append(f"آنها {rounds} راند مبارزه کردند")
     # شدت آسیب قهرمان
     if hero_hp > 50:
         description.append("قهرمان به شدت زخمی شد.")

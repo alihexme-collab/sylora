@@ -2,7 +2,6 @@ from .bus import bus
 from database.db_manager import get_db
 from database.model import *
 from sqlalchemy import select
-import random as rnd
 from sqlalchemy.ext.asyncio import AsyncSession as Session
 
 
@@ -10,7 +9,6 @@ class UpgradeRequest:
     async def get(self, **data):
         self.chat_id = data.get("chat_id")
         self.message = data.get("message")
-        print("/"*59)
         await self._create()
 
     async def _get_infos(self):
@@ -95,72 +93,72 @@ class UpgradeRequest:
 
 
 
-class StatsUpgradeService:
-    def __init__(self, db, bus, player, character, stats, message):
-        self.db = db
-        self.bus = bus
-        self.player = player
-        self.character = character
-        self.stats = stats
-        self.message = message
+# class StatsUpgradeService:
+#     def __init__(self, db, bus, player, character, stats, message):
+#         self.db = db
+#         self.bus = bus
+#         self.player = player
+#         self.character = character
+#         self.stats = stats
+#         self.message = message
 
-    def get_total_stats(self):
-        return (
-            self.stats.health +
-            self.stats.mana +
-            self.stats.energy +
-            self.stats.strength +
-            self.stats.speed +
-            self.stats.defense +
-            self.stats.intelligence +
-            self.stats.luck
-        )
+#     def get_total_stats(self):
+#         return (
+#             self.stats.health +
+#             self.stats.mana +
+#             self.stats.energy +
+#             self.stats.strength +
+#             self.stats.speed +
+#             self.stats.defense +
+#             self.stats.intelligence +
+#             self.stats.luck
+#         )
 
-    def get_required_total_for_level(self, level):
-        return 100 + (level - 1) * 40
+#     def get_required_total_for_level(self, level):
+#         return 100 + (level - 1) * 40
 
-    def calc_cost(self, stat_name):
-        value = getattr(self.stats, stat_name)
-        base_costs = {
-            "strength": 10,
-            "speed": 10,
-            "defense": 12,
-            "intelligence": 12,
-            "luck": 15,
-            "charisma": 14,
-            "health": 8,
-            "mana": 8,
-            "energy": 8,
-        }
-        base = base_costs.get(stat_name, 10)
-        return base + (value // 5) * 5
+#     def calc_cost(self, stat_name):
+#         value = getattr(self.stats, stat_name)
+#         base_costs = {
+#             "strength": 10,
+#             "speed": 10,
+#             "defense": 12,
+#             "intelligence": 12,
+#             "luck": 15,
+#             "charisma": 14,
+#             "health": 8,
+#             "mana": 8,
+#             "energy": 8,
+#         }
+#         base = base_costs.get(stat_name, 10)
+#         return base + (value // 5) * 5
 
-    def can_upgrade(self, stat_name):
-        cost = self.calc_cost(stat_name)
-        return self.stats.experience >= cost
+#     def can_upgrade(self, stat_name):
+#         cost = self.calc_cost(stat_name)
+#         return self.stats.experience >= cost
 
-    async def apply_upgrade(self, stat_name):
-        cost = self.calc_cost(stat_name)
-        if self.stats.experience < cost:
-            return False, "XP کافی نیست"
+#     async def apply_upgrade(self, stat_name):
+#         cost = self.calc_cost(stat_name)
+#         if self.stats.experience < cost:
+#             return False, "XP کافی نیست"
 
-        setattr(self.stats, stat_name, getattr(self.stats, stat_name) + 1)
-        self.stats.experience -= cost
+#         setattr(self.stats, stat_name, getattr(self.stats, stat_name) + 1)
+#         self.stats.experience -= cost
 
-        leveled_up = await self.check_level_up()
+#         leveled_up = await self.check_level_up()
 
-        await self.db.commit()
-        return True, leveled_up
+#         await self.db.commit()
+#         return True, leveled_up
 
-    async def check_level_up(self):
-        total = self.get_total_stats()
-        required = self.get_required_total_for_level(self.stats.level)
+#     async def check_level_up(self):
+#         total = self.get_total_stats()
+#         required = self.get_required_total_for_level(self.stats.level)
 
-        if total >= required:
-            self.stats.level += 1
-            return True
+#         if total >= required:
+#             self.stats.level += 1
+#             return True
 
-        return False
+#         return False
 
         
 

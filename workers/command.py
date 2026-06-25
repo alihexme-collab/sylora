@@ -4,6 +4,7 @@ from database.model import *
 from sqlalchemy import select, func
 from datetime import datetime
 import random as rnd
+import uuid
 
 
 class Command:
@@ -23,107 +24,91 @@ class Command:
             case "/start":
                 await self.start(chat_id, username, name, message)
 
-
     async def start(self, chat_id, username, name, message):
+        # ۱. بررسی وجود بازیکن با استفاده از chat_id (عددی)
+        player_id_in_db = await self.check_exists(int(chat_id))
 
-        player_id = await self.check_exists(chat_id)
-
-        if player_id:
-
+        if player_id_in_db:
+            # اگر بازیکن وجود داشت، اطلاعاتش را لود می‌کنیم
             async with get_db() as session:
-
                 hero = await session.scalar(
-                    select(Character).where(Character.player_id==player_id)
+                    select(Character).where(Character.player_id == player_id_in_db)
                 )
-
                 stats = await session.scalar(
-                    select(CharacterStats).where(
-                        CharacterStats.character_id==hero.character_id
-                    )
+                    select(CharacterStats).where(CharacterStats.character_id == hero.character_id)
                 )
-
         else:
-
-            with open("number.txt") as f:
-                numbers = f.readlines()
-            
-            player_id=numbers[0].strip()
-            character_id=numbers[1].strip()
+            # ۲. بازیکن جدید: تولید UUID برای آیدی‌های متنی
+            new_player_uuid = str(uuid.uuid4()) # تولید یک رشته طولانی و یکتا
+            new_character_uuid = str(uuid.uuid4())
 
             async with get_db() as session:
+                try:
+                    # انتخاب لوکیشن و NPC پایه
+                    loc = await session.scalar(select(Location).order_by(func.random()).limit(1))
+                    npc = await session.scalar(select(NpcStats).order_by(func.random()).limit(1))
 
-                session.add(Player(
-                    player_id=player_id,
-                    telegram_id=chat_id,
-                    username=username,
-                    created_at=datetime.now(),
-                    role="user",
-                    is_banned=False
-                ))
+                    # الف) ساخت رکورد بازیکن
+                    new_player = Player(
+                        player_id=new_player_uuid,
+                        telegram_id=int(chat_id), # ستون عددی
+                        username=username,
+                        created_at=datetime.now(),
+                        role="user",
+                        is_banned=False
+                    )
+                    session.add(new_player)
 
-            async with get_db() as session:
+                    # ب) ساخت رکورد کاراکتر
+                    hero = Character(
+                        character_id=new_character_uuid,
+                        player_id=new_player_uuid,
+                        created_at=datetime.now(),
+                        is_alive=True,
+                        name=name,
+                        race="انسان",
+                        character_path=loc.location_id if loc else "loc_start_001",
+                        age=20
+                    )
+                    session.add(hero)
 
-                loc=await session.scalar(
-                    select(Location).order_by(func.random()).limit(1)
-                )
+                    # ج) ساخت رکورد استت‌ها
+                    stats = CharacterStats(
+                        character_id=new_character_uuid,
+                        strength=int(npc.strength * rnd.uniform(0.9, 1.1)),
+                        speed=int(npc.speed * rnd.uniform(0.9, 1.1)),
+                        defense=int(npc.defense * rnd.uniform(0.9, 1.1)),
+                        intelligence=int(npc.intelligence * rnd.uniform(0.9, 1.1)),
+                        luck=max(1, int(npc.luck * rnd.uniform(0.9, 1.1))),
+                        energy=npc.energy,
+                        mana=int(npc.mana * rnd.uniform(0.9, 1.1)),
+                        hp=int(npc.hp * rnd.uniform(0.9, 1.1)),
+                        exp=0,
+                        level=1,
+                        hunting_points=0,
+                        gold=100 # مقدار اولیه ثابت یا رندوم
+                    )
+                    session.add(stats)
 
-                hero=Character(
-                    character_id=character_id,
-                    player_id=player_id,
-                    created_at=datetime.now(),
-                    is_alive=True,
-                    name=name,
-                    race="انسان",
-                    character_path=loc.location_id,
-                    age=20
-                )
+                    # ذخیره نهایی در دیتابیس
+                    await session.commit()
+                    player_id_in_db = new_player_uuid
 
-                session.add(hero)
+                except Exception as e:
+                    await session.rollback()
+                    print(f"Error creating profile with UUID: {e}")
+                    return
 
-            async with get_db() as session:
-
-                npc=await session.scalar(
-                    select(NpcStats).order_by(func.random()).limit(1)
-                )
-
-                stats=CharacterStats(
-                    character_id=character_id,
-                    strength=int(npc.strength*rnd.uniform(0.9,1.1)),
-                    speed=int(npc.speed*rnd.uniform(0.9,1.1)),
-                    defense=int(npc.defense*rnd.uniform(0.9,1.1)),
-                    intelligence=int(npc.intelligence*rnd.uniform(0.9,1.1)),
-                    luck=max(1,int(npc.luck*rnd.uniform(0.9,1.1))),
-                    energy=npc.energy,
-                    mana=int(npc.mana*rnd.uniform(0.9,1.1)),
-                    hp=int(npc.hp*rnd.uniform(0.9,1.1)),
-                    exp=int(npc.exp*rnd.uniform(0.9,1.1)),
-                    level=int(npc.level*rnd.uniform(0.9,1.1)),
-                    hunting_points=int(npc.hunting_points*rnd.uniform(0.9,1.1)),
-                    black_knowledge_level=int(npc.black_knowledge_level*rnd.uniform(0.9,1.1)),
-                    gold=int(npc.gold*rnd.uniform(0.9,1.1)),
-                )
-
-                session.add(stats)
-
-            with open("number.txt","w") as f:
-                f.write(f"{int(player_id)+1}\n{int(character_id)+1}")
-
-        print("COMMAND.start reached end")
-        print("about to emit GENERATE_START")
-        print("chat_id:", chat_id)
-        print("message:", message)
-        print("hero:", hero)
-        print("stats:", stats)
+        # ۳. ارسال به خروجی
         await bus.emit(
             "GENERATE_START",
-            player_id=chat_id,
+            player_id=player_id_in_db,
             chat_id=chat_id,
             username=username,
             character=hero,
             stats=stats,
             message=message
         )
-        print("GENERATE_START emitted")
 
     async def check_exists(self,chat_id):
 

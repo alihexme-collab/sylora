@@ -22,7 +22,14 @@ class Sleep:
                  "SEND",
                  player_id=self.chat_id,
                  message=self.message,
-                 text="100 تجربه از شما کاسته شد و 5000 سلامتی به شما اضافه گشت"
+                 text=f"""
+از شما 100 واحد تجربه کاسته شد
+
+وضیت فعلی منابع شما:
+سلامتی: {self.stats.hp}
+انرژی: {self.stats.energy}
+مانا: {self.stats.mana}
+"""
             )
         else:
              await bus.emit(

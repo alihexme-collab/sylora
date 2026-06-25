@@ -90,7 +90,7 @@ class Move:
         player = await self.session.execute(
             select(Player).where(Player.telegram_id == self.chat_id)
         )
-        player = player.sclar_one_or_none()
+        player = player.scalar_one_or_none()
 
         character =await self.session.execute(
             select(Character).where(Character.player_id == player.player_id)

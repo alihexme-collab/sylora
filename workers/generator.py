@@ -10,7 +10,7 @@ class Generator:
         character = data.get("character")
         stats = data.get("stats")
         message = data.get("message")
-
+        loc_name=data.get("loc")
         stats_text = (
             f"نام:   {character.name:<10} | سن: {character.age}\n"
             f"سطح:   {stats.level:<10} | پول: {stats.gold}\n"
@@ -25,7 +25,8 @@ class Generator:
             f"درود {character.name} جوان!\n"
             f"دوست داری چیکار کنی؟ میخوای یک رقیب برات پیدا کنم تا باهاش مبارزه کنی؟\n\n"
             f"<b>اطلاعات فعلی شما:</b>\n"
-            f"<code>{stats_text}</code>"
+            f"<code>{stats_text}</code>\n"
+            f"<b>مکان فعلی شما: {loc_name}</b>"
         )
 
         buttons = ["نبرد", "ارتقا", "حرکت", "استراحت"]

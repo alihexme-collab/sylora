@@ -68,7 +68,7 @@ class Command:
                         is_alive=True,
                         name=name,
                         race="انسان",
-                        character_path=loc.location_id if loc else "loc_start_001",
+                        character_path=loc.location_id if loc else "loc_abyss_000",
                         age=20
                     )
                     session.add(hero)
@@ -110,7 +110,8 @@ class Command:
             username=username,
             character=hero,
             stats=stats,
-            message=message
+            message=message,
+            loc=loc.name
         )
 
     async def check_exists(self,chat_id):

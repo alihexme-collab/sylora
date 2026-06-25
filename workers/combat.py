@@ -341,10 +341,12 @@ class CombatSession:
         if rnd.randint(1, 50) <= self.hero_stats.luck:
             hero_energy_cost *= 0.75
             hero_mana_cost *= 0.75
+            hero_hp_cost *= 0.75
 
         if rnd.randint(1, 50) <= self.enemy_stats.luck:
             enemy_energy_cost *= 0.75
             enemy_mana_cost *= 0.75
+            enemy_hp_cost *= 0.75
 
         self.hero_stats.energy -= hero_energy_cost
         self.hero_stats.mana -= hero_mana_cost

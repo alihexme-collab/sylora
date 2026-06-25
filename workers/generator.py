@@ -102,7 +102,7 @@ class Generator:
     async def generate_combat_rewards(self, **payload):
         xp = payload.get("xp", 0)
         player = payload.get("player")
-        stats: CharacterStats = payload("stats")
+        stats: CharacterStats = payload.get("stats")
         if xp <= 0:
             text = "⚔️ از این مبارزه تجربه خاصی به دست نیاوردی."
         else:

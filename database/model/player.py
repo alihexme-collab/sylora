@@ -6,7 +6,7 @@ class Player(Base):
     __tablename__ = 'player'
 
     player_id = Column(Text, nullable=False, primary_key=True)
-    telegram_id = Column(Integer)
+    telegram_id = Column(BigInteger)
     username = Column(Text)
     created_at = Column(DateTime)
     last_active = Column(DateTime)

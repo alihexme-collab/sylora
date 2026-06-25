@@ -58,6 +58,7 @@ class Command:
                         is_banned=False
                     )
                     session.add(new_player)
+                    await session.flush() 
 
                     # ب) ساخت رکورد کاراکتر
                     hero = Character(
@@ -71,6 +72,7 @@ class Command:
                         age=20
                     )
                     session.add(hero)
+                    await session.flush() 
 
                     # ج) ساخت رکورد استت‌ها
                     stats = CharacterStats(
@@ -89,6 +91,7 @@ class Command:
                         gold=100 # مقدار اولیه ثابت یا رندوم
                     )
                     session.add(stats)
+                    await session.flush() 
 
                     # ذخیره نهایی در دیتابیس
                     await session.commit()

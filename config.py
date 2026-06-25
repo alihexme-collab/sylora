@@ -6,7 +6,7 @@ load_dotenv()
 
 # توکن‌ها و دسترسی‌ها
 BOT_TOKEN = os.getenv("BOT_TOKEN", "your_bale_or_telegram_token")
-BOT_BASE_URL = os.getenv("BOT_BASE_URL", "https://tapi.bale.ai/") # اتصال مستقیم به سرور بله یا تلگرام
+BOT_BASE_URL = os.getenv("BOT_BASE_URL", "https://api.telegram.org/") # اتصال مستقیم به سرور بله یا تلگرام
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-proj-...")
 
 # اطلاعات دیتابیس عظیم سیلورا

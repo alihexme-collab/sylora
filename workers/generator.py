@@ -18,7 +18,7 @@ class Generator:
             f"استقامت: {stats.defense:<10} | جان: {stats.hp}\n"
             f"هوش:   {stats.intelligence:<10} | شانس: {stats.luck}\n"
             f"انرژی:  {stats.energy:<10} | مانا: {stats.mana}\n"
-            f"اعتبار: {stats.hunting_points:<10} | دانش سیاه: {stats.black_knowledge_level}"
+            f"امتیاز شکار: {stats.hunting_points:<10} | تجربه: {stats.exp}"
         )
 
         text = (

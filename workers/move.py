@@ -19,11 +19,22 @@ class Move:
         loc = data.split(":")[1]
         async with get_db() as self.session:
             character: Character = await self.get_character()
-            character.character_path = loc
-            loc = await self.session.execute(
-                select(Location).where(Location.location_id == loc)
-            )
-            loc = loc.scalar_one_or_none()
+            if self.stats.energy >= 20:
+                self.stats.energy -= 20
+                character.character_path = loc
+                loc = await self.session.execute(
+                    select(Location).where(Location.location_id == loc)
+                )
+                loc = loc.scalar_one_or_none()
+            else:
+                await bus.emit(
+                    "SEND",
+                    player_id=self.chat_id,
+                    message=self.message,
+                    chat_id=self.chat_id,
+                    text=f"شما انرژی کافی برای رفتن به {loc.name} ندارید"
+                )
+
 
         await bus.emit(
             "GENERATE_WELCOME_LOCATION",
@@ -95,6 +106,11 @@ class Move:
         character =await self.session.execute(
             select(Character).where(Character.player_id == player.player_id)
         )
+        stats = await self.session.execute(
+            select(CharacterStats).where(CharacterStats.character_id == character.character_id)
+        )
+        
+        self.stats = stats.scalar_one_or_none()
         return character.scalar_one_or_none()
 
 

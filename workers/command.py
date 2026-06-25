@@ -46,7 +46,7 @@ class Command:
 
             with open("number.txt") as f:
                 numbers = f.readlines()
-
+            
             player_id=numbers[0].strip()
             character_id=numbers[1].strip()
 

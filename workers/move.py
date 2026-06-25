@@ -38,8 +38,8 @@ class Move:
 
     async def find_nearby_places(self):
         async with get_db() as self.session:
-            character: Character = await self.get_character()
-            curr_loc = character.character_path  # مثلا: loc_abyss_012
+            char: Character = await self.get_character()
+            curr_loc = char.character_path  # مثلا: loc_abyss_012
             
             # استخراج بخش ریجن و شماره از مکان فعلی
             # فرض بر این است که فرمت همیشه loc_REGION_NUMBER است
@@ -95,7 +95,7 @@ class Move:
         character =await self.session.execute(
             select(Character).where(Character.player_id == player.player_id)
         )
-        return character
+        return character.scalar_one_or_none()
 
 
 move = Move()

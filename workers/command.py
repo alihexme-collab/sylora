@@ -37,6 +37,9 @@ class Command:
                 stats = await session.scalar(
                     select(CharacterStats).where(CharacterStats.character_id == hero.character_id)
                 )
+                loc = await session.scalar(
+                    select(Location).where(Location.location_id == hero.character_path)
+                )
         else:
             # ۲. بازیکن جدید: تولید UUID برای آیدی‌های متنی
             new_player_uuid = str(uuid.uuid4()) # تولید یک رشته طولانی و یکتا

@@ -52,7 +52,7 @@ async def narrate(TYPE, **data):
     {details}
     """
             stream = await client.chat.completions.create(
-                model="gpt5-nano",
+                model="gemma-3-27b-it",
                 stream=True,
                 messages=[
                     {

@@ -104,10 +104,10 @@ class Move:
         player = player.scalar_one_or_none()
 
         character =await self.session.execute(
-            select(Character).where(Character.player_id == player.player_id)
+            select(Character).where(Character.player_id == self.player.player_id)
         )
         stats = await self.session.execute(
-            select(CharacterStats).where(CharacterStats.character_id == character.character_id)
+            select(CharacterStats).where(CharacterStats.character_id == self.character.character_id)
         )
         
         self.stats = stats.scalar_one_or_none()

@@ -66,7 +66,7 @@ class Receive:
         data = query.data.split(':')
         _, enemy_type, enemy_id, character_id = data
         await bus.emit(
-            "COMBAT",
+            "START_COMBAT",
             player_id=chat_id,
             chat_id=chat_id,
             enemy_id=enemy_id,

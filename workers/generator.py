@@ -1,7 +1,7 @@
 from .bus import bus
 from database.model import *
 from ai import *
-import asyncio, time
+import time
 
 class Generator:
     async def generate_start(self, **data):

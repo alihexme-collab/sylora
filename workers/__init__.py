@@ -10,3 +10,4 @@ from .update import *
 from .loader import *
 from .move import *
 from .sleep import *
+from .start_combat import *

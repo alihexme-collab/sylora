@@ -18,24 +18,24 @@ def compare_power(player_power, enemy_power):
         return "بسیار خطرناک ☠️"
 
 def power_of(stats):
-                if getattr(stats, "intelligence", False):
-                    return (
-                        (stats.strength or 0)
-                        + (stats.speed or 0)
-                        + (stats.defense or 0)
-                        + (stats.intelligence or 0)
-                        + (stats.hp or 0)
-                        + (stats.mana or 0)
-                        + (stats.energy or 0)
-                    )
-                else:
-                    return (
-                        (stats.strength or 0)
-                        + (stats.speed or 0)
-                        + (stats.hp or 0)
-                        + (stats.mana or 0)
-                        + (stats.energy or 0)
-                    )
+    if getattr(stats, "intelligence", False):
+        return (
+            (stats.strength or 0)
+            + (stats.speed or 0)
+            + (stats.defense or 0)
+            + (stats.intelligence or 0)
+            + (stats.hp or 0)
+            + (stats.mana or 0)
+            + (stats.energy or 0)
+        )
+    else:
+        return (
+            (stats.strength or 0)
+            + (stats.speed or 0)
+            + (stats.hp or 0)
+            + (stats.mana or 0)
+            + (stats.energy or 0)
+        )
 class FindEnemy:
     async def receive_fight(self, **data):
         chat_id = data.get("chat_id")

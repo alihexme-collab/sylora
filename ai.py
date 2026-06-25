@@ -27,7 +27,7 @@ async def narrate(TYPE, **data):
     
     برنده: {winner.name}
     بازنده: {loser.name}
-    مکان: {location.split('_')[1]}
+    مکان: {location}
 
     قوانین:
     - برنده حتما {winner.name} باشد

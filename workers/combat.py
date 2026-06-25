@@ -3,6 +3,7 @@ from database.db_manager import get_db
 from database.model import *
 from sqlalchemy import select
 import random as rnd
+from sqlalchemy.ext.asyncio import AsyncSession as Session
 
 class Combat:
     async def start(self, **data):
@@ -164,6 +165,7 @@ class CombatSession:
 
     async def calculate(self):
         async with get_db() as session:
+            session: Session = session
             self.session = session
             await self._set_stats()
 
@@ -201,6 +203,10 @@ class CombatSession:
                 self.hero_stats.hp = 0
             if self.enemy_stats.hp < 0:
                 self.enemy_stats.hp = 0
+            
+            loc = select(Location).where(Location.location_id == self.hero.character_path)
+            loc = await session.execute(loc)
+            loc = loc.scalar_one_or_none()
             await self.session.commit()
         winner = self.hero if self.enemy_stats.hp <= 0 else self.enemy
         loser = self.enemy if winner == self.hero else self.hero
@@ -214,7 +220,7 @@ class CombatSession:
             loser=loser,
             details=self.details,
             message=self.message,
-            location=self.hero.character_path,
+            location=loc.name,
             hero_stats=self.hero_stats,
             enemy_stats=self.enemy_stats,
             hro=self.hero.name,

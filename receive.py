@@ -76,6 +76,46 @@ class Receive:
             character_id=character_id
         )
 
+    async def move(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        query = update.callback_query
+        await query.answer()
+
+        chat_id = query.message.chat_id
+
+        await bus.emit(
+            "MOVE",
+            player_id=chat_id,
+            chat_id=chat_id,
+            message=query.message
+        )
+
+    async def move_to(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        query = update.callback_query
+        await query.answer()
+
+        chat_id = query.message.chat_id
+
+        await bus.emit(
+            "MOVE_TO",
+            player_id=chat_id,
+            chat_id=chat_id,
+            message=query.message,
+            data=query.data
+        )
+
+    async def sleep(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        query = update.callback_query
+        await query.answer()
+
+        chat_id = query.message.chat_id
+
+        await bus.emit(
+            "SLEEP",
+            player_id=chat_id,
+            chat_id=chat_id,
+            message=query.message
+        )
+    
     
 
 
@@ -93,14 +133,14 @@ app.add_handler(
 app.add_handler(
     CallbackQueryHandler(
         receive.fight,
-        pattern="^مبارزه با یک حریف$"
+        pattern="^نبرد$"
     )
 )
 
 app.add_handler(
     CallbackQueryHandler(
         receive.upgrade_request,
-        pattern="^ارتقای آمار$"
+        pattern="^ارتقا$"
     )
 )
 
@@ -115,5 +155,26 @@ app.add_handler(
     CallbackQueryHandler(
         receive.choose_enemy,
         pattern="^fight:"
+    )
+)
+
+app.add_handler(
+    CallbackQueryHandler(
+        receive.move,
+        pattern="^حرکت$"
+    )
+)
+
+app.add_handler(
+    CallbackQueryHandler(
+        receive.sleep,
+        pattern="^استراحت$"
+    )
+)
+
+app.add_handler(
+    CallbackQueryHandler(
+        receive.choose_enemy,
+        pattern="^move_to:"
     )
 )

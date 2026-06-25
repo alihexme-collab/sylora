@@ -31,3 +31,4 @@ MAX_AGE_GRAND_MAN_STAGE_1 = 10
 REQUIRED_POINTS_STAGE_1 = 1000
 MAX_AGE_GRAND_MAN_STAGE_2 = 20
 REQUIRED_POINTS_STAGE_2 = 1000000
+"postgresql://postgres:hduxedqCprfexGrXTxymcevMzuPmVPon@acela.proxy.rlwy.net:40537/railway"

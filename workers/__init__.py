@@ -8,3 +8,5 @@ from .battle_rewards import *
 from .upgrade_stats import *
 from .update import *
 from .loader import *
+from .move import *
+from .sleep import *

@@ -28,7 +28,7 @@ class Generator:
             f"<code>{stats_text}</code>"
         )
 
-        buttons = ["مبارزه با یک حریف", "ارتقای آمار"]
+        buttons = ["نبرد", "ارتقا", "حرکت", "استراحت"]
         print("GENERATE_START reached")
         print("message =", data.get("message"))
 
@@ -64,7 +64,6 @@ class Generator:
 
         full_text = ""
         last_edit_time = 0
-
         async for part in narrate(
             "combat",
             winner=winner,
@@ -103,7 +102,7 @@ class Generator:
     async def generate_combat_rewards(self, **payload):
         xp = payload.get("xp", 0)
         player = payload.get("player")
-
+        stats: CharacterStats = payload("stats")
         if xp <= 0:
             text = "⚔️ از این مبارزه تجربه خاصی به دست نیاوردی."
         else:
@@ -112,6 +111,11 @@ class Generator:
 
     تو از این نبرد
     ✨ {xp} تجربه به دست آوردی.
+
+    منابع باقیمانده:
+    سلامتی: {stats.hp}
+    انرژی: {stats.energy}
+    مانا: {stats.mana}
     """
 
         await bus.emit(
@@ -203,7 +207,42 @@ class Generator:
             chat_id=chat_id
         )
         
+    async def generate_move_choices(self, **data):
+        chat_id=data.get("chat_id")
+        message=data.get("message")
+        buttons=data.get("buttons")
 
+        text="مقصد خود را انتخاب کنید"
+        await bus.emit(
+            "SEND",
+            player_id=chat_id,
+            chat_id=chat_id,
+            text=text,
+            buttons=buttons,
+            parse_mode="HTML",
+            message=message
+        )
+
+    async def generate_welcome_location(self, **data):
+        chat_id=data.get("chat_id")
+        message=data.get("message")
+        loc: Location=data.get("loc")
+        char=data.get("char")
+        text=f"""
+خوش آمدید {char.name} به {loc.name}
+
+سطح خطر: {loc.danger_level}
+
+توضیحات این منطقه:
+{loc.description}
+"""
+        await bus.emit(
+            "SEND",
+            player_id=chat_id,
+            chat_id=chat_id,
+            message=message,
+            text=text
+        )
 
 
 
@@ -214,3 +253,5 @@ bus.listen("GENERATE_COMBAT_STORY", gen.generate_combat_story)
 bus.listen("GENERATE_COMBAT_REWARDS", gen.generate_combat_rewards)
 bus.listen("SHOW_UPGADE_COSTS", gen.generate_upgrade_choices)
 bus.listen("GENERATE_UPDATE", gen.generate_update)
+bus.listen("GENERATE_MOVE_CHOICES", gen.generate_move_choices)
+bus.listen("GENERATE_WELCOME_LOCATION", gen.generate_welcome_location)

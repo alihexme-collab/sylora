@@ -174,7 +174,7 @@ app.add_handler(
 
 app.add_handler(
     CallbackQueryHandler(
-        receive.choose_enemy,
+        receive.move_to,
         pattern="^move_to:"
     )
 )

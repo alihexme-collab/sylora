@@ -88,7 +88,7 @@ class Command:
                         energy=npc.energy,
                         mana=int(npc.mana * rnd.uniform(0.9, 1.1)),
                         hp=int(npc.hp * rnd.uniform(0.9, 1.1)),
-                        exp=0,
+                        exp=200,
                         level=1,
                         hunting_points=0,
                         gold=100 # مقدار اولیه ثابت یا رندوم

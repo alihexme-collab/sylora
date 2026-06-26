@@ -4,33 +4,7 @@ from ai import *
 import random
 from combat_cache import get_combat_session, create_combat_session
 
-
 class Generator:
-
-    def _describe_option(self, option):
-        choices = {
-            "Hard Fight": [
-                "با خشونت و قدرت کامل یورش برد",
-                "بی‌پروا حمله‌ای سنگین انجام داد",
-                "با تمام توان ضربه زد",
-            ],
-            "Normal Fight": [
-                "با تمرکز حمله‌ای متعادل انجام داد",
-                "با ریتمی کنترل‌شده پیشروی کرد",
-                "حمله‌ای حساب‌شده انجام داد",
-            ],
-            "Dodge": [
-                "سبک‌پا حرکت کرد و آماده‌ی جاخالی بود",
-                "با سرعت جابه‌جا شد و از درگیری مستقیم پرهیز کرد",
-                "با احتیاط وارد حمله شد و مسیر ضربه را تغییر داد",
-            ],
-            "Defend": [
-                "موضع دفاعی گرفت و به‌دنبال فرصت ماند",
-                "سپر دفاعی خود را حفظ کرد و ضدحمله زد",
-                "محافظه‌کارانه جلو آمد و ضربه‌ای کنترل‌شده وارد کرد",
-            ],
-        }
-        return random.choice(choices.get(option, ["حرکت کرد"]))
 
     async def generate_start(self, **data):
 
@@ -70,6 +44,32 @@ class Generator:
             parse_mode="HTML",
             message=message
         )
+
+    def _describe_combat_stance(self, name, option):
+        choices = {
+            "Hard Fight": [
+                f"{name} بی‌پروا جلو کشید و همه‌چیز را روی یک ضربه‌ی سنگین گذاشت",
+                f"{name} با خشونت حمله را آغاز کرد و دفاع خود را کمی باز گذاشت",
+                f"{name} با تمام نیرو فشار آورد و قصد داشت مبارزه را سریع تمام کند",
+            ],
+            "Normal Fight": [
+                f"{name} با ریتمی کنترل‌شده وارد درگیری شد",
+                f"{name} فاصله را سنجید و حمله‌ای متعادل را آماده کرد",
+                f"{name} بدون عجله، اما با تمرکز کامل پیشروی کرد",
+            ],
+            "Dodge": [
+                f"{name} سبک‌پا حرکت کرد و بیشتر روی جاخالی دادن تمرکز داشت",
+                f"{name} فاصله را حفظ کرد و منتظر اشتباه حریف ماند",
+                f"{name} مدام زاویه عوض کرد تا هدف سخت‌تری باشد",
+            ],
+            "Defend": [
+                f"{name} گارد گرفت و آماده شد ضربه‌ی حریف را مهار کند",
+                f"{name} موضع دفاعی گرفت و به‌دنبال فرصت ضدحمله ماند",
+                f"{name} عقب ننشست، اما اولویت را به حفظ جان و کنترل ضربه داد",
+            ],
+        }
+
+        return random.choice(choices.get(option, [f"{name} آماده‌ی ادامه‌ی مبارزه شد"]))
     def _describe_attack_result(self, attacker_name, defender_name, attack_data):
         if not attack_data["hit"]:
             return f"{attacker_name} حمله کرد اما {defender_name} به‌موقع جاخالی داد."
@@ -121,26 +121,42 @@ class Generator:
 
         intro = " ".join(intro_parts) + "."
 
-        hero_action_text = self._describe_option(hero_option)
-        enemy_action_text = self._describe_option(enemy_option)
+        hero_stance_text = self._describe_combat_stance(hero, hero_option)
+        enemy_stance_text = self._describe_combat_stance(enemy, enemy_option)
 
-        hero_result_text = self._describe_attack_result(hero, enemy, hero_attack)
-        enemy_result_text = self._describe_attack_result(enemy, hero, enemy_attack)
+        hero_result_text = self._describe_attack_result(
+            hero,
+            enemy,
+            hero_attack,
+            attacker_option=hero_option,
+            defender_option=enemy_option,
+        )
+
+        enemy_result_text = self._describe_attack_result(
+            enemy,
+            hero,
+            enemy_attack,
+            attacker_option=enemy_option,
+            defender_option=hero_option,
+        )
+
 
         status_text = (
-            f"وضعیت فعلی — "
-            f"{hero}: HP={round(hero_stats.hp, 1)} | Energy={round(hero_stats.energy, 1)} | Mana={round(hero_stats.mana, 1)}\n"
-            f"{enemy}: HP={round(enemy_stats.hp, 1)} | Energy={round(enemy_stats.energy, 1)} | Mana={round(enemy_stats.mana, 1)}"
+            "وضعیت پس از این تبادل:\n"
+            f"{hero}: ❤️ {round(hero_stats.hp, 1)} | ⚡ {round(hero_stats.energy, 1)} | 🔮 {round(hero_stats.mana, 1)}\n"
+            f"{enemy}: ❤️ {round(enemy_stats.hp, 1)} | ⚡ {round(enemy_stats.energy, 1)} | 🔮 {round(enemy_stats.mana, 1)}"
         )
+
 
         text = (
             f"{intro}\n\n"
-            f"{hero} {hero_action_text}.\n"
-            f"{hero_result_text}\n\n"
-            f"{enemy} {enemy_action_text}.\n"
+            f"{hero_stance_text}.\n"
+            f"{enemy_stance_text}.\n\n"
+            f"{hero_result_text}\n"
             f"{enemy_result_text}\n\n"
             f"{status_text}"
         )
+
 
         sent_message = await bus.emit(
             "SEND",

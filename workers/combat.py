@@ -267,7 +267,7 @@ class CombatSession:
             self.luck()
             self.set_powers()
             await self.costs()
-
+            await self.session.commit() 
             hero_finished = self.hero_stats.hp <= 0 or self.hero_stats.energy <= 0
             enemy_finished = self.enemy_stats.hp <= 0 or self.enemy_stats.energy <= 0
 

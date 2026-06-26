@@ -159,8 +159,8 @@ class Generator:
         xp = payload.get("xp", 0)
         player = payload.get("player")
         stats: CharacterStats = payload.get("stats")
-        enemy_name=payload("enemy_name")
-        you_win = payload("you_win")
+        enemy_name=payload.get("enemy_name")
+        you_win = payload.get("you_win")
         if xp <= 0:
             text = "⚔️ از این مبارزه تجربه خاصی به دست نیاوردی."
         else:

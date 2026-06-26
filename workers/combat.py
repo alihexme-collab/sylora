@@ -17,7 +17,7 @@ class Combat:
         enemy_option = data.get("enemy_option")
 
         async with get_db() as session:
-            player_query = select(Player).where(Player.player_id == player_id)
+            player_query = select(Player).where(Player.telegram_id == player_id)
             player_result = await session.execute(player_query)
             player = player_result.scalar_one_or_none()
 

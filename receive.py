@@ -247,6 +247,6 @@ app.add_handler(
 app.add_handler(
     CallbackQueryHandler(
         receive.combat,
-        pattern="^combat:"
+        pattern="^cb|"
     )
 )

@@ -285,6 +285,12 @@ class CombatSession:
                     else:
                         winner = "enemy"
                         loser = "hero"
+                loc = select(Location).where(Location.location_id == self.hero.character_path)
+                loc = await session.execute(loc)
+                loc = loc.scalar_one_or_none()
+
+                await self.session.commit()
+
                 await bus.emit(
                     "GENERATE_COMBAT_STORY",
                     player_id=self.player_id,

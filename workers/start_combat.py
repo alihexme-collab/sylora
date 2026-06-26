@@ -21,12 +21,12 @@ class StartCombat:
             result = await session.execute(query)
             hero= result.scalar_one_or_none()
 
-            if self.enemy_type == 'npc':
-                query=select(Npc).where(Npc.npc_id == self.enemy_id)
-            elif self.enemy_type == "enemy":
-                query=select(Enemy).where(Enemy.enemy_id == self.enemy_id)
+            if enemy_type == 'npc':
+                query=select(Npc).where(Npc.npc_id == enemy_id)
+            elif enemy_type == "enemy":
+                query=select(Enemy).where(Enemy.enemy_id == enemy_id)
             else:
-                query=select(Character).where(Character.character_id == self.enemy_id)
+                query=select(Character).where(Character.character_id ==enemy_id)
             result = await session.execute(query)
             emy = result.scalar_one_or_none()
         if not enemy_option:

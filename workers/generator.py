@@ -2,6 +2,7 @@ from .bus import bus
 from database.model import *
 from ai import *
 import random
+from combat_cache import get_combat_session, create_combat_session
 
 
 class Generator:
@@ -309,14 +310,6 @@ class Generator:
         enemy_option = data.get("enemy_option")
         emy = data.get("emy")
 
-        text = ""
-
-        options = [
-            "Hard Fight",
-            "Normal Fight",
-            "Dodge",
-            "Defend"
-        ]
         OPTION_CODES = {
             "Hard Fight": "hf",
             "Normal Fight": "nf",
@@ -324,14 +317,15 @@ class Generator:
             "Defend": "df",
         }
 
+        text = ""
 
-        if enemy_option == options[0]:
+        if enemy_option == "Hard Fight":
             text += f"{emy.name} دارد یک فرم خاص به خود می‌گیرد، چه می‌کنید؟\n"
-        elif enemy_option == options[1]:
+        elif enemy_option == "Normal Fight":
             text += f"{emy.name} دارد فاصله‌اش را با شما کم می‌کند، چه می‌کنید؟\n"
-        elif enemy_option == options[2]:
+        elif enemy_option == "Dodge":
             text += f"{emy.name} حرکات شما را زیر نظر گرفته است، چه می‌کنید؟\n"
-        elif enemy_option == options[3]:
+        elif enemy_option == "Defend":
             text += f"{emy.name} دارد فاصله‌اش را با شما زیاد می‌کند، چه می‌کنید؟\n"
 
         text += (
@@ -344,11 +338,23 @@ class Generator:
 
         enemy_code = OPTION_CODES.get(enemy_option, "nf")
 
+        session_payload = {
+            "enemy_id": enemy_id,
+            "enemy_option": enemy_option,
+            "enemy_option_code": enemy_code,
+            "enemy_type": enemy_type,
+            "enemy_count": enemy_count,
+            "character_id": character_id,
+            "player_id": player_id,
+        }
+
+        session_id = create_combat_session(session_payload)
+
         buttons = [
-            {"text": "1", "callback": f"cb|{enemy_id}|{enemy_code}|{enemy_type}|{enemy_count}|{character_id}|hf"},
-            {"text": "2", "callback": f"cb|{enemy_id}|{enemy_code}|{enemy_type}|{enemy_count}|{character_id}|nf"},
-            {"text": "3", "callback": f"cb|{enemy_id}|{enemy_code}|{enemy_type}|{enemy_count}|{character_id}|dg"},
-            {"text": "4", "callback": f"cb|{enemy_id}|{enemy_code}|{enemy_type}|{enemy_count}|{character_id}|df"},
+            {"text": "1", "callback": f"cb|{session_id}|hf"},
+            {"text": "2", "callback": f"cb|{session_id}|nf"},
+            {"text": "3", "callback": f"cb|{session_id}|dg"},
+            {"text": "4", "callback": f"cb|{session_id}|df"},
         ]
 
         await bus.emit(

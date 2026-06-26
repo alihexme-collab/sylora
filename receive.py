@@ -2,6 +2,7 @@ from telegram import *
 from workers.loader import *
 from telegram.ext import *
 from workers import *
+from combat_cache import get_combat_session, delete_combat_session
 
 
 class Receive:
@@ -120,50 +121,65 @@ class Receive:
         query = update.callback_query
         await query.answer()
 
-        chat_id = query.message.chat_id
-        data = query.data
-
-        if not data.startswith("cb|"):
-            await query.answer("داده‌ی مبارزه نامعتبر است.", show_alert=True)
-            return
-
-        try:
-            _, emy_id, emy_opt_code, emy_type, emy_count, char_id, char_opt_code = data.split("|")
-        except ValueError:
-            await query.answer("فرمت داده‌ی مبارزه خراب است.", show_alert=True)
-            return
-
-        option_map = {
+        OPTION_CODE_MAP = {
             "hf": "Hard Fight",
             "nf": "Normal Fight",
             "dg": "Dodge",
             "df": "Defend",
         }
 
-        enemy_option = option_map.get(emy_opt_code)
-        character_option = option_map.get(char_opt_code)
+        data = query.data
+        chat_id = query.message.chat_id
 
-        if not enemy_option or not character_option:
-            await query.answer("گزینه‌ی مبارزه نامعتبر است.", show_alert=True)
+        if not data or not data.startswith("cb|"):
+            await query.answer("داده‌ی نامعتبر.", show_alert=True)
+            return
+
+        parts = data.split("|")
+
+        if len(parts) != 3:
+            await query.answer("فرمت داده نامعتبر است.", show_alert=True)
+            return
+
+        _, session_id, char_opt_code = parts
+
+        character_option = OPTION_CODE_MAP.get(char_opt_code)
+
+        if character_option is None:
+            await query.answer("اکشن انتخاب‌شده معتبر نیست.", show_alert=True)
+            return
+
+        session = get_combat_session(session_id)
+
+        if not session:
+            await query.answer("این اکشن منقضی شده است. دوباره تلاش کنید.", show_alert=True)
+            return
+
+        if session.get("owner_chat_id") is not None and session.get("owner_chat_id") != chat_id:
+            await query.answer("این دکمه متعلق به شما نیست.", show_alert=True)
             return
 
         try:
-            enemy_count = int(emy_count)
-        except (TypeError, ValueError):
+            enemy_count = int(session.get("enemy_count", 1))
+        except ValueError:
             enemy_count = 1
 
         await bus.emit(
             "COMBAT",
-            player_id=chat_id,
+            player_id=session.get("player_id") or chat_id,
             chat_id=chat_id,
             message=query.message,
-            enemy_id=emy_id,
-            enemy_option=enemy_option,
-            enemy_type=emy_type,
+            enemy_id=session["enemy_id"],
+            enemy_option=session["enemy_option"],
+            enemy_type=session.get("enemy_type", "npc"),
             enemy_count=enemy_count,
-            character_id=char_id,
-            character_option=character_option
+            character_id=session["character_id"],
+            character_option=character_option,
         )
+
+        delete_combat_session(session_id)
+
+
 
     
 

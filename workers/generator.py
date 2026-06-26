@@ -70,24 +70,56 @@ class Generator:
         }
 
         return random.choice(choices.get(option, [f"{name} آماده‌ی ادامه‌ی مبارزه شد"]))
-    def _describe_attack_result(self, attacker_name, defender_name, attack_data):
-        if not attack_data["hit"]:
-            return f"{attacker_name} حمله کرد اما {defender_name} به‌موقع جاخالی داد."
+    def _describe_attack_result(self, attacker_name, defender_name, attack_data, attacker_option=None, defender_option=None):
+        damage = round(attack_data.get("hp_damage", 0), 1)
+
+        if not attack_data.get("hit"):
+            if defender_option == "Dodge":
+                return random.choice([
+                    f"{attacker_name} برای ضربه زدن جلو آمد، اما {defender_name} با یک جابه‌جایی سریع از مسیر حمله بیرون رفت.",
+                    f"ضربه‌ی {attacker_name} به هدف نرسید؛ {defender_name} دقیقاً در لحظه‌ی مناسب جاخالی داد.",
+                    f"{attacker_name} فرصت حمله پیدا کرد، اما حرکت سریع {defender_name} ضربه را بی‌اثر کرد.",
+                ])
+
+            if defender_option == "Defend":
+                return random.choice([
+                    f"{attacker_name} حمله کرد، اما گارد محکم {defender_name} مسیر ضربه را بست.",
+                    f"ضربه‌ی {attacker_name} به دفاع {defender_name} برخورد کرد و اثر جدی نگذاشت.",
+                    f"{defender_name} با تمرکز بالا ضربه‌ی {attacker_name} را خواند و آن را خنثی کرد.",
+                ])
+
+            return random.choice([
+                f"{attacker_name} حمله کرد، اما ضربه‌اش از کنار {defender_name} گذشت.",
+                f"{attacker_name} ضربه زد، اما دقت کافی نداشت و حمله بی‌نتیجه ماند.",
+                f"{defender_name} در آخرین لحظه از مسیر حمله‌ی {attacker_name} خارج شد.",
+            ])
 
         parts = []
 
         if attack_data.get("critical"):
-            parts.append(f"ضربه‌ی {attacker_name} به شکل بحرانی فرود آمد")
+            parts.append(random.choice([
+                f"ضربه‌ی {attacker_name} سنگین و دقیق فرود آمد",
+                f"{attacker_name} نقطه‌ی ضعف {defender_name} را پیدا کرد",
+                f"حمله‌ی {attacker_name} با شدت زیادی به هدف خورد",
+            ]))
         else:
-            parts.append(f"حمله‌ی {attacker_name} به هدف برخورد کرد")
+            parts.append(random.choice([
+                f"حمله‌ی {attacker_name} به {defender_name} برخورد کرد",
+                f"{attacker_name} توانست ضربه‌اش را به هدف برساند",
+                f"ضربه‌ی {attacker_name} از دفاع {defender_name} عبور کرد",
+            ]))
 
         if attack_data.get("blocked"):
-            parts.append(f"اما {defender_name} بخش زیادی از آن را مهار کرد")
+            parts.append(random.choice([
+                f"اما {defender_name} بخشی از آسیب را مهار کرد",
+                f"ولی گارد {defender_name} شدت ضربه را کاهش داد",
+                f"با این حال، دفاع {defender_name} نگذاشت ضربه کامل بنشیند",
+            ]))
 
-        damage = round(attack_data.get("hp_damage", 0), 1)
-        parts.append(f"و {damage} آسیب وارد شد")
+        parts.append(f"{damage} آسیب وارد شد")
 
         return "، ".join(parts) + "."
+
 
 
 

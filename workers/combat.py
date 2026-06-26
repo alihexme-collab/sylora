@@ -401,8 +401,8 @@ class CombatSession:
         )
 
         enemy_total_power = self.calc_damage(
-            self.enemy_stats.strength +
-            self.enemy_stats.speed +
+            self.enemy_stats.strength,
+            self.enemy_stats.speed,
             self.enemy_stats.mana
         )
 

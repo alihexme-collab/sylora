@@ -226,7 +226,7 @@ class CombatSession:
                     owner_stats.defense += item_effect["defense"]
                     owner_stats.hp += item_effect["hp_bonus"]
 
-                case "Postion":
+                case "Potion":
                     if item_effect["target"] == "hp":
                         owner_stats.hp += item_effect["restore_value"]
                     elif item_effect["target"] == "mana":
@@ -285,6 +285,20 @@ class CombatSession:
                     else:
                         winner = "enemy"
                         loser = "hero"
+                await bus.emit(
+                    "GENERATE_COMBAT_STORY",
+                    player_id=self.player_id,
+                    chat_id=self.chat_id,
+                    hero=self.hero,
+                    details=self.details,
+                    message=self.message,
+                    location=loc.name if loc else None,
+                    hero_stats=self.hero_stats,
+                    enemy_stats=self.enemy_stats,
+                    hro=self.hero.name,
+                    emy=self.enemy.name,
+                    enemy_count=self.enemy_count,
+                )
 
                 await bus.emit(
                     "COMBAT_FINISHED",
@@ -380,13 +394,13 @@ class CombatSession:
         )
 
     async def costs(self):
-        hero_total_power = (
-            self.hero_stats.strength +
-            self.hero_stats.speed +
+        hero_total_power = self.calc_damage(
+            self.hero_stats.strength,
+            self.hero_stats.speed,
             self.hero_stats.mana
         )
 
-        enemy_total_power = (
+        enemy_total_power = self.calc_damage(
             self.enemy_stats.strength +
             self.enemy_stats.speed +
             self.enemy_stats.mana
@@ -395,8 +409,8 @@ class CombatSession:
         hero_mana_ratio = self.hero_stats.mana / max(1, hero_total_power)
         enemy_mana_ratio = self.enemy_stats.mana / max(1, enemy_total_power)
 
-        hero_intelligence = getattr(self.hero_stats, "intelligence", 0) or 0
-        enemy_intelligence = getattr(self.enemy_stats, "intelligence", 0) or 0
+        hero_intelligence = getattr(self.hero_stats, "intelligence", 50) or 50
+        enemy_intelligence = getattr(self.enemy_stats, "intelligence", 50) or 50
 
         hero_mana_ratio *= 1 + hero_intelligence / 5000
         enemy_mana_ratio *= 1 + enemy_intelligence / 5000
@@ -410,8 +424,8 @@ class CombatSession:
         hero_action = self._action_profile(self.character_option)
         enemy_action = self._action_profile(self.enemy_option)
 
-        enemy_defense = getattr(self.enemy_stats, "defense", 0) or 0
-        hero_defense = getattr(self.hero_stats, "defense", 0) or 0
+        enemy_defense = getattr(self.enemy_stats, "defense", 50) or 50
+        hero_defense = getattr(self.hero_stats, "defense", 50) or 50
 
         hero_attack = self._resolve_attack(
             attacker_stats=self.hero_stats,
@@ -432,28 +446,28 @@ class CombatSession:
         hero_energy_cost = (
             self.hero_damage *
             hero_energy_ratio *
-            0.02 *
+            0.1 *
             hero_action["energy_cost"]
         )
 
         hero_mana_cost = (
             self.hero_damage *
             hero_mana_ratio *
-            0.02 *
+            0.3 *
             hero_action["mana_cost"]
         )
 
         enemy_energy_cost = (
             self.enemy_damage *
             enemy_energy_ratio *
-            0.02 *
+            0.1 *
             enemy_action["energy_cost"]
         )
 
         enemy_mana_cost = (
             self.enemy_damage *
             enemy_mana_ratio *
-            0.02 *
+            0.3 *
             enemy_action["mana_cost"]
         )
 
@@ -525,16 +539,16 @@ class CombatSession:
         attacker_action = self._action_profile(attacker_option)
         defender_action = self._action_profile(defender_option)
 
-        attacker_speed = getattr(attacker_stats, "speed", 0) or 0
-        defender_speed = getattr(defender_stats, "speed", 0) or 0
+        attacker_speed = getattr(attacker_stats, "speed", 50) or 50
+        defender_speed = getattr(defender_stats, "speed", 50) or 50
 
-        attacker_luck = getattr(attacker_stats, "luck", 0) or 0
-        defender_luck = getattr(defender_stats, "luck", 0) or 0
+        attacker_luck = getattr(attacker_stats, "luck", 5) or 5
+        defender_luck = getattr(defender_stats, "luck", 5) or 5
 
-        attacker_intelligence = getattr(attacker_stats, "intelligence", 0) or 0
-        defender_intelligence = getattr(defender_stats, "intelligence", 0) or 0
+        attacker_intelligence = getattr(attacker_stats, "intelligence", 50) or 50
+        defender_intelligence = getattr(defender_stats, "intelligence", 50) or 50
 
-        defender_defense = getattr(defender_stats, "defense", 0) or 0
+        defender_defense = getattr(defender_stats, "defense", 50) or 50
 
         speed_advantage = attacker_speed - defender_speed
         luck_advantage = attacker_luck - defender_luck

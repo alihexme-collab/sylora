@@ -310,61 +310,94 @@ class Generator:
         enemy_option = data.get("enemy_option")
         emy = data.get("emy")
 
-        OPTION_CODES = {
+        option_codes = {
             "Hard Fight": "hf",
             "Normal Fight": "nf",
             "Dodge": "dg",
             "Defend": "df",
         }
 
-        text = ""
+        action_labels = {
+            "Hard Fight": "حمله سنگین",
+            "Normal Fight": "حمله عادی",
+            "Dodge": "جاخالی",
+            "Defend": "دفاع",
+        }
 
-        def check(enemy_option):
-            if enemy_option == "Hard Fight":
-                text += f"{emy.name} دارد یک فرم خاص به خود می‌گیرد، چه می‌کنید؟\n"
-                return True
-            elif enemy_option == "Normal Fight":
-                text += f"{emy.name} دارد فاصله‌اش را با شما کم می‌کند، چه می‌کنید؟\n"
-                return True
-            elif enemy_option == "Dodge":
-                text += f"{emy.name} حرکات شما را زیر نظر گرفته است، چه می‌کنید؟\n"
-                return True
-            elif enemy_option == "Defend":
-                text += f"{emy.name} دارد فاصله‌اش را با شما زیاد می‌کند، چه می‌کنید؟\n"
-                return True
-            
-        c = check(enemy_option)
-        if not c:
-            enemy_option = random.choice(OPTION_CODES.keys())
-            check(enemy_option)
+        enemy_name = getattr(emy, "name", "دشمن")
 
-        text += (
-            "\n"
+        enemy_option_texts = {
+            "Hard Fight": [
+                f"{enemy_name} نفسش را حبس می‌کند و نیرویی سنگین در بدنش جمع می‌شود.",
+                f"{enemy_name} با خشونت قدمی جلو می‌گذارد؛ ضربه‌ی بعدی‌اش احتمالاً سنگین خواهد بود.",
+                f"عضلات {enemy_name} منقبض می‌شود و نگاهش مستقیم روی نقطه‌ی ضعف شما قفل می‌کند.",
+            ],
+            "Normal Fight": [
+                f"{enemy_name} با ریتمی ثابت به سمت شما حرکت می‌کند و آماده‌ی یک حمله‌ی مستقیم است.",
+                f"{enemy_name} فاصله را کم می‌کند؛ نه شتاب‌زده، نه کند. یک حمله‌ی حساب‌شده در راه است.",
+                f"{enemy_name} جای پایش را تنظیم می‌کند و برای درگیری نزدیک آماده می‌شود.",
+            ],
+            "Dodge": [
+                f"{enemy_name} بدنش را سبک می‌کند و حرکات شما را با دقت زیر نظر می‌گیرد.",
+                f"{enemy_name} کمی عقب می‌نشیند؛ انگار منتظر است شما اول حمله کنید.",
+                f"نگاه {enemy_name} روی دست‌ها و شانه‌های شما می‌چرخد. احتمالاً آماده‌ی جاخالی دادن است.",
+            ],
+            "Defend": [
+                f"{enemy_name} گاردش را بالا می‌آورد و وزنش را روی پای عقب می‌اندازد.",
+                f"{enemy_name} حالت دفاعی می‌گیرد و مسیرهای حمله‌ی مستقیم را می‌بندد.",
+                f"{enemy_name} فاصله را حفظ می‌کند و آماده است ضربه‌ی شما را جذب یا منحرف کند.",
+            ],
+        }
+
+        if enemy_option not in option_codes:
+            enemy_option = random.choice(list(option_codes.keys()))
+
+        enemy_action_text = random.choice(enemy_option_texts[enemy_option])
+
+        try:
+            enemy_count_value = int(enemy_count)
+        except (TypeError, ValueError):
+            enemy_count_value = 1
+
+        if enemy_count_value > 1:
+            count_text = f"\nتعداد دشمنان درگیر: {enemy_count_value}"
+        else:
+            count_text = ""
+
+        text = (
+            f"{enemy_action_text}"
+            f"{count_text}\n\n"
+            "حرکت بعدی شما چیست؟\n\n"
             "1) اجرای حمله سنگین\n"
+            "   ریسک بیشتر، آسیب بیشتر. اگر دشمن آماده‌ی جاخالی یا دفاع باشد، ممکن است به ضررتان تمام شود.\n\n"
             "2) اجرای حمله عادی\n"
+            "   انتخابی متعادل برای حفظ فشار و کنترل جریان مبارزه.\n\n"
             "3) آماده‌ی جاخالی\n"
+            "   مناسب وقتی حس می‌کنید ضربه‌ی سنگینی در راه است.\n\n"
             "4) گارد گرفتن\n"
+            "   کاهش ریسک و آماده شدن برای تحمل یا خنثی کردن ضربه‌ی دشمن."
         )
 
-        enemy_code = OPTION_CODES.get(enemy_option, "nf")
+        enemy_code = option_codes.get(enemy_option, "nf")
 
         session_payload = {
             "enemy_id": enemy_id,
             "enemy_option": enemy_option,
             "enemy_option_code": enemy_code,
             "enemy_type": enemy_type,
-            "enemy_count": enemy_count,
+            "enemy_count": enemy_count_value,
             "character_id": character_id,
             "player_id": player_id,
+            "owner_chat_id": player_id,
         }
 
         session_id = create_combat_session(session_payload)
 
         buttons = [
-            {"text": "1", "callback": f"cb|{session_id}|hf"},
-            {"text": "2", "callback": f"cb|{session_id}|nf"},
-            {"text": "3", "callback": f"cb|{session_id}|dg"},
-            {"text": "4", "callback": f"cb|{session_id}|df"},
+            {"text": "حمله سنگین", "callback": f"cb|{session_id}|hf"},
+            {"text": "حمله عادی", "callback": f"cb|{session_id}|nf"},
+            {"text": "جاخالی", "callback": f"cb|{session_id}|dg"},
+            {"text": "دفاع", "callback": f"cb|{session_id}|df"},
         ]
 
         await bus.emit(
@@ -374,6 +407,7 @@ class Generator:
             buttons=buttons,
             message=message,
         )
+
 
 
 

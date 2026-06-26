@@ -17,7 +17,7 @@ class StartCombat:
         character_option=data.get("character_option")
 
         async with get_db() as session:
-            query=select(Character).where(Character.character_id == self.character_id)
+            query=select(Character).where(Character.character_id == character_id)
             result = await session.execute(query)
             hero= result.scalar_one_or_none()
 

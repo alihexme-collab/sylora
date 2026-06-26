@@ -34,7 +34,9 @@ class BattleRewards:
             player=self.player,
             xp=gained_xp,
             stats=self.hero_stats,
-            message=self.message
+            message=self.message,
+            you_win=self.is_hero_winner(),
+            enemy_name=self.enemy.name
         )
 
 

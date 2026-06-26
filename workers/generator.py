@@ -159,10 +159,12 @@ class Generator:
         xp = payload.get("xp", 0)
         player = payload.get("player")
         stats: CharacterStats = payload.get("stats")
+        enemy_name=payload("enemy_name")
+        you_win = payload("you_win")
         if xp <= 0:
             text = "⚔️ از این مبارزه تجربه خاصی به دست نیاوردی."
         else:
-            text = f"""
+            text = f"""{f"شما پیروز شدید و {enemy_name} را شکست دادید!" if you_win else f"شما بازنده شدید و از {enemy_name} شکست خوردید"}
     🏆 دستاورد مبارزه
 
     تو از این نبرد

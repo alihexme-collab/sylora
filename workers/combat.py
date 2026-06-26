@@ -9,25 +9,34 @@ class Combat:
     async def start(self, **data):
         enemy_id = data.get("enemy_id")
         message = data.get("message")
-        chat_id = data.get("chat_id") or getattr(player, "telegram_id", None)
         enemy_type = data.get("enemy_type", "npc")
         enemy_count = data.get("enemy_count", 1)
-        character_id= data.get("character_id")
+        character_id = data.get("character_id")
         player_id = data.get("player_id")
+        character_option = data.get("character_option")
+        enemy_option = data.get("enemy_option")
 
         async with get_db() as session:
-            query=select(Character).where(Character.character_id == character_id)
-            result = await session.execute(query)
-            hero= result.scalar_one_or_none()
+            player_query = select(Player).where(Player.player_id == player_id)
+            player_result = await session.execute(player_query)
+            player = player_result.scalar_one_or_none()
 
-            if enemy_type == 'npc':
-                query=select(Npc).where(Npc.npc_id == enemy_id)
-            elif enemy_type == "enemy":
-                query=select(Enemy).where(Enemy.enemy_id == enemy_id)
-            else:
-                query=select(Character).where(Character.character_id == enemy_id)
+            chat_id = getattr(player, "telegram_id", None)
+
+            query = select(Character).where(Character.character_id == character_id)
             result = await session.execute(query)
-            emy= result.scalar_one_or_none()
+            hero = result.scalar_one_or_none()
+
+            if enemy_type == "npc":
+                query = select(Npc).where(Npc.npc_id == enemy_id)
+            elif enemy_type == "enemy":
+                query = select(Enemy).where(Enemy.enemy_id == enemy_id)
+            else:
+                query = select(Character).where(Character.character_id == enemy_id)
+
+            result = await session.execute(query)
+            emy = result.scalar_one_or_none()
+
         session = CombatSession(
             player_id=player_id,
             enemy=emy,
@@ -36,13 +45,80 @@ class Combat:
             chat_id=chat_id,
             enemy_type=enemy_type,
             enemy_count=enemy_count,
+            character_option=character_option,
+            enemy_option=enemy_option,
+            character_id=character_id,
+            enemy_id=enemy_id,
         )
         await session.calculate()
 
 
 
+
 class CombatSession:
-    def __init__(self, player_id, hero, enemy, message, chat_id, enemy_type="npc", enemy_count=1):
+    def __init__(self, 
+                 player_id, 
+                 hero, 
+                 enemy, 
+                 message, 
+                 chat_id, 
+                 character_option,
+                 enemy_option,
+                 character_id,
+                 enemy_id,
+                 enemy_type="npc", 
+                 enemy_count=1,
+                 ):
+        self.OPTIONS = {
+            "Hard Fight",
+            "Normal Fight",
+            "Dodge",
+            "Defend",
+        }
+
+        self.ACTION_PROFILES = {
+            "Hard Fight": {
+                "damage_out": 1.35,
+                "damage_taken": 1.15,
+                "hit": 1.10,
+                "evade": 0.65,
+                "defense": 0.85,
+                "energy_cost": 1.45,
+                "mana_cost": 1.15,
+                "min_damage": 25,
+            },
+            "Normal Fight": {
+                "damage_out": 1.0,
+                "damage_taken": 1.0,
+                "hit": 1.0,
+                "evade": 1.0,
+                "defense": 1.0,
+                "energy_cost": 1.0,
+                "mana_cost": 1.0,
+                "min_damage": 20,
+            },
+            "Dodge": {
+                "damage_out": 0.55,
+                "damage_taken": 0.70,
+                "hit": 0.75,
+                "evade": 1.90,
+                "defense": 1.05,
+                "energy_cost": 0.85,
+                "mana_cost": 0.75,
+                "min_damage": 5,
+            },
+            "Defend": {
+                "damage_out": 0.70,
+                "damage_taken": 0.55,
+                "hit": 0.90,
+                "evade": 0.85,
+                "defense": 1.75,
+                "energy_cost": 0.65,
+                "mana_cost": 0.65,
+                "min_damage": 8,
+            },
+        }
+
         self.hero = hero
         self.enemy = enemy
         self.message = message
@@ -51,6 +127,12 @@ class CombatSession:
         self.enemy_count = max(1, int(enemy_count or 1))
         self.details = {}
         self.player_id = player_id
+        self.character_option = character_option if character_option in self.OPTIONS else "Normal Fight"
+        self.enemy_option = enemy_option if enemy_option in self.OPTIONS else "Normal Fight"
+
+        self.character_id = character_id
+        self.enemy_id = enemy_id
+
 
     async def _get_infos(self, uid: str, entity_type: str):
             if entity_type == "hero":
@@ -172,11 +254,6 @@ class CombatSession:
             if not self.hero_stats or not self.enemy_stats:
                 return
 
-            print()
-            print("-" * 100)
-            print(f"Hero: {self.hero} vs Enemy: {self.enemy} x{self.enemy_count}")
-            print("-" * 100)
-
             self.base_hero_energy = self.hero_stats.energy
             self.base_hero_mana = self.hero_stats.mana
             self.base_hero_hp = self.hero_stats.hp
@@ -185,67 +262,78 @@ class CombatSession:
             self.base_enemy_mana = self.enemy_stats.mana
             self.base_enemy_hp = self.enemy_stats.hp
 
+            self.turn = 1
+
             self.luck()
             self.set_powers()
+            await self.costs()
 
-            self.count = 0
-            while (
-                self.hero_stats.energy > 0
-                and self.enemy_stats.energy > 0
-                and self.hero_stats.hp > 0
-                and self.enemy_stats.hp > 0
-            ):
-                await self.costs()
-                self.luck()
-                self.set_powers()
-                self.count += 1
-            if self.hero_stats.hp < 0:
-                self.hero_stats.hp = 0
-            if self.enemy_stats.hp < 0:
-                self.enemy_stats.hp = 0
-            
-            loc = select(Location).where(Location.location_id == self.hero.character_path)
-            loc = await session.execute(loc)
-            loc = loc.scalar_one_or_none()
-            await self.session.commit()
-        winner = self.hero if self.enemy_stats.hp <= 0 else self.enemy
-        loser = self.enemy if winner == self.hero else self.hero
+            hero_finished = self.hero_stats.hp <= 0 or self.hero_stats.energy <= 0
+            enemy_finished = self.enemy_stats.hp <= 0 or self.enemy_stats.energy <= 0
 
-        await bus.emit(
-            "GENERATE_COMBAT_STORY",
-            player_id=self.chat_id,
-            chat_id=self.chat_id,
-            hero=self.hero,
-            winner=winner,
-            loser=loser,
-            details=self.details,
-            message=self.message,
-            location=loc.name,
-            hero_stats=self.hero_stats,
-            enemy_stats=self.enemy_stats,
-            hro=self.hero.name,
-            emy=self.enemy.name,
-            enemy_count=self.enemy_count
-        )
-        winner = "hero" if self.enemy_stats.hp <= 0 else "enemy"
-        loser = "enemy" if winner == self.hero else "hero"
+            if hero_finished or enemy_finished:
+                if self.hero_stats.hp <= 0 or self.hero_stats.energy <= 0:
+                    winner = "enemy"
+                    loser = "hero"
+                elif self.enemy_stats.hp <= 0 or self.enemy_stats.energy <= 0:
+                    winner = "hero"
+                    loser = "enemy"
+                else:
+                    if self.hero_stats.hp > self.enemy_stats.hp:
+                        winner = "hero"
+                        loser = "enemy"
+                    else:
+                        winner = "enemy"
+                        loser = "hero"
 
-        await bus.emit(
-            "COMBAT_FINISHED",
-            player_id=self.player_id,
-            enemy=self.enemy,
-            enemy_type=self.enemy_type,
-            enemy_count=self.enemy_count,
-            winner=winner,
-            loser=loser,
-            details=self.details,
-            hero_stats=self.hero_stats,
-            enemy_stats=self.enemy_stats,
-            message=self.message,
-            chat_id=self.chat_id,
-        )
+                await bus.emit(
+                    "COMBAT_FINISHED",
+                    player_id=self.player_id,
+                    enemy=self.enemy,
+                    enemy_type=self.enemy_type,
+                    enemy_count=self.enemy_count,
+                    winner=winner,
+                    loser=loser,
+                    details=self.details,
+                    hero_stats=self.hero_stats,
+                    enemy_stats=self.enemy_stats,
+                    message=self.message,
+                    chat_id=self.chat_id,
+                )
+            else:
+                loc = select(Location).where(Location.location_id == self.hero.character_path)
+                loc = await session.execute(loc)
+                loc = loc.scalar_one_or_none()
 
-            
+                await self.session.commit()
+
+                await bus.emit(
+                    "GENERATE_COMBAT_STORY",
+                    player_id=self.player_id,
+                    chat_id=self.chat_id,
+                    hero=self.hero,
+                    details=self.details,
+                    message=self.message,
+                    location=loc.name if loc else None,
+                    hero_stats=self.hero_stats,
+                    enemy_stats=self.enemy_stats,
+                    hro=self.hero.name,
+                    emy=self.enemy.name,
+                    enemy_count=self.enemy_count,
+                )
+
+                await bus.emit(
+                    "START_COMBAT",
+                    player_id=self.player_id,
+                    chat_id=self.chat_id,
+                    enemy_id=self.enemy_id,
+                    enemy_type=self.enemy_type,
+                    enemy_count=self.enemy_count,
+                    message=self.message,
+                    character_id=self.character_id,
+                    enemy_option=self.enemy_option,
+                    character_option=self.character_option,
+                )
 
     def luck(self):
         self.hero_luck = rnd.randint(1, max(1, int(self.hero_stats.luck)))
@@ -319,45 +407,92 @@ class CombatSession:
         hero_energy_ratio = 1 - hero_mana_ratio
         enemy_energy_ratio = 1 - enemy_mana_ratio
 
-        hero_energy_cost = self.hero_damage * hero_energy_ratio * 0.02
-        hero_mana_cost = self.hero_damage * hero_mana_ratio * 0.02
-        hero_hp_cost = max(
-            self.enemy_damage - self.hero_stats.defense,
-            20
-        )
+        hero_action = self._action_profile(self.character_option)
+        enemy_action = self._action_profile(self.enemy_option)
 
-        enemy_energy_cost = self.enemy_damage * enemy_energy_ratio * 0.02
-        enemy_mana_cost = self.enemy_damage * enemy_mana_ratio * 0.02
         enemy_defense = getattr(self.enemy_stats, "defense", 0) or 0
+        hero_defense = getattr(self.hero_stats, "defense", 0) or 0
 
-        enemy_hp_cost = max(
-            self.hero_damage - enemy_defense,
-            20
+        hero_attack = self._resolve_attack(
+            attacker_stats=self.hero_stats,
+            defender_stats=self.enemy_stats,
+            attacker_damage=self.hero_damage,
+            attacker_option=self.character_option,
+            defender_option=self.enemy_option,
         )
 
-        hero_energy_cost *= 100 / (100 + self.hero_stats.defense)
+        enemy_attack = self._resolve_attack(
+            attacker_stats=self.enemy_stats,
+            defender_stats=self.hero_stats,
+            attacker_damage=self.enemy_damage,
+            attacker_option=self.enemy_option,
+            defender_option=self.character_option,
+        )
+
+        hero_energy_cost = (
+            self.hero_damage *
+            hero_energy_ratio *
+            0.02 *
+            hero_action["energy_cost"]
+        )
+
+        hero_mana_cost = (
+            self.hero_damage *
+            hero_mana_ratio *
+            0.02 *
+            hero_action["mana_cost"]
+        )
+
+        enemy_energy_cost = (
+            self.enemy_damage *
+            enemy_energy_ratio *
+            0.02 *
+            enemy_action["energy_cost"]
+        )
+
+        enemy_mana_cost = (
+            self.enemy_damage *
+            enemy_mana_ratio *
+            0.02 *
+            enemy_action["mana_cost"]
+        )
+
+        hero_energy_cost *= 100 / (100 + hero_defense)
         enemy_energy_cost *= 100 / (100 + enemy_defense)
 
-        if rnd.randint(1, 50) <= self.hero_stats.luck:
+        hero_luck_chance = self._clamp(self.hero_stats.luck / 100, 0.02, 0.35)
+        enemy_luck_chance = self._clamp(self.enemy_stats.luck / 100, 0.02, 0.35)
+
+        if rnd.random() <= hero_luck_chance:
             hero_energy_cost *= 0.75
             hero_mana_cost *= 0.75
-            hero_hp_cost *= 0.75
 
-        if rnd.randint(1, 50) <= self.enemy_stats.luck:
+        if rnd.random() <= enemy_luck_chance:
             enemy_energy_cost *= 0.75
             enemy_mana_cost *= 0.75
-            enemy_hp_cost *= 0.75
 
-        self.hero_stats.energy -= hero_energy_cost
-        self.hero_stats.mana -= hero_mana_cost
-        self.hero_stats.hp -= hero_hp_cost
-        self.enemy_stats.energy -= enemy_energy_cost
-        self.enemy_stats.mana -= enemy_mana_cost
-        self.enemy_stats.hp -= enemy_hp_cost
 
+        hero_hp_cost = enemy_attack["hp_damage"]
+        enemy_hp_cost = hero_attack["hp_damage"]
+
+        self.hero_stats.energy = max(0, self.hero_stats.energy - hero_energy_cost)
+        self.hero_stats.mana = max(0, self.hero_stats.mana - hero_mana_cost)
+        self.hero_stats.hp = max(0, self.hero_stats.hp - hero_hp_cost)
+
+        self.enemy_stats.energy = max(0, self.enemy_stats.energy - enemy_energy_cost)
+        self.enemy_stats.mana = max(0, self.enemy_stats.mana - enemy_mana_cost)
+        self.enemy_stats.hp = max(0, self.enemy_stats.hp - enemy_hp_cost)
 
         self.details = {
-            "rounds" : self.count,
+            "turn": getattr(self, "turn", 1),
+            "options": {
+                "hero": self.character_option,
+                "enemy": self.enemy_option,
+            },
+            "attacks": {
+                "hero": hero_attack,
+                "enemy": enemy_attack,
+            },
             "Total-hero-costs": {
                 "energy": self.base_hero_energy - self.hero_stats.energy,
                 "mana": self.base_hero_mana - self.hero_stats.mana,
@@ -369,6 +504,123 @@ class CombatSession:
                 "hp": self.base_enemy_hp - self.enemy_stats.hp,
             }
         }
+
+    
+    def _clamp(self, value, minimum, maximum):
+        return max(minimum, min(value, maximum))
+
+
+    def _action_profile(self, option):
+        return self.ACTION_PROFILES.get(option, self.ACTION_PROFILES["Normal Fight"])
+
+
+    def _resolve_attack(
+        self,
+        attacker_stats,
+        defender_stats,
+        attacker_damage,
+        attacker_option,
+        defender_option,
+    ):
+        attacker_action = self._action_profile(attacker_option)
+        defender_action = self._action_profile(defender_option)
+
+        attacker_speed = getattr(attacker_stats, "speed", 0) or 0
+        defender_speed = getattr(defender_stats, "speed", 0) or 0
+
+        attacker_luck = getattr(attacker_stats, "luck", 0) or 0
+        defender_luck = getattr(defender_stats, "luck", 0) or 0
+
+        attacker_intelligence = getattr(attacker_stats, "intelligence", 0) or 0
+        defender_intelligence = getattr(defender_stats, "intelligence", 0) or 0
+
+        defender_defense = getattr(defender_stats, "defense", 0) or 0
+
+        speed_advantage = attacker_speed - defender_speed
+        luck_advantage = attacker_luck - defender_luck
+        intelligence_advantage = attacker_intelligence - defender_intelligence
+
+        effective_defense = defender_defense * defender_action["defense"]
+
+        if defender_option in ("Dodge", "Defend"):
+            smart_defense_bonus = 1 + self._clamp(defender_intelligence / 2000, 0, 0.25)
+            effective_defense *= smart_defense_bonus
+
+        hit_chance = 0.75
+        hit_chance += speed_advantage / 300
+        hit_chance += luck_advantage / 200
+        hit_chance += intelligence_advantage / 1200
+
+        hit_chance *= attacker_action["hit"]
+        hit_chance /= defender_action["evade"]
+
+        if attacker_option == "Hard Fight" and defender_option == "Dodge":
+            hit_chance *= 0.75
+
+        if attacker_option == "Hard Fight" and defender_option == "Defend":
+            hit_chance *= 0.90
+
+        if attacker_option == "Dodge":
+            hit_chance *= 0.90
+
+        hit_chance = self._clamp(hit_chance, 0.05, 0.95)
+
+        if rnd.random() > hit_chance:
+            return {
+                "hit": False,
+                "critical": False,
+                "blocked": False,
+                "hp_damage": 0,
+                "hit_chance": hit_chance,
+            }
+
+        raw_damage = attacker_damage
+        raw_damage *= attacker_action["damage_out"]
+        raw_damage *= defender_action["damage_taken"]
+
+        intelligence_damage_bonus = 1 + self._clamp(attacker_intelligence / 2500, 0, 0.20)
+        raw_damage *= intelligence_damage_bonus
+
+        raw_damage -= effective_defense
+
+        hp_damage = max(raw_damage, attacker_action["min_damage"])
+
+        critical_chance = attacker_luck / 200
+
+        if attacker_option == "Hard Fight":
+            critical_chance += 0.05
+        elif attacker_option == "Dodge":
+            critical_chance -= 0.03
+
+        critical_chance -= self._clamp(defender_intelligence / 3000, 0, 0.10)
+        critical_chance = self._clamp(critical_chance, 0, 0.30)
+
+        critical = rnd.random() <= critical_chance
+        if critical:
+            crit_multiplier = 1.35 + self._clamp(attacker_intelligence / 5000, 0, 0.15)
+            hp_damage *= crit_multiplier
+
+        blocked = False
+        if defender_option == "Defend":
+            block_chance = 0.25 + defender_defense / 1000 + self._clamp(defender_intelligence / 4000, 0, 0.10)
+            block_chance = self._clamp(block_chance, 0.25, 0.55)
+
+            if rnd.random() <= block_chance:
+                hp_damage *= 0.55
+                blocked = True
+
+        hp_damage = max(0, round(hp_damage, 2))
+
+        return {
+            "hit": True,
+            "critical": critical,
+            "blocked": blocked,
+            "hp_damage": hp_damage,
+            "hit_chance": round(hit_chance, 4),
+            "critical_chance": round(critical_chance, 4),
+            "effective_defense": round(effective_defense, 2),
+        }
+
 
 
 combat = Combat()

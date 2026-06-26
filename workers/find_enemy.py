@@ -191,7 +191,7 @@ class FindEnemy:
                 })
             await bus.emit(
                 "SEND",
-                player_id=chat_id,
+                player_id=player.player_id,
                 chat_id=chat_id,
                 text=text,
                 buttons=buttons,

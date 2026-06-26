@@ -66,7 +66,7 @@ class Receive:
         data = query.data.split(':')
         _, enemy_type, enemy_id, character_id = data
         await bus.emit(
-            "COMBAT",
+            "START_COMBAT",
             player_id=chat_id,
             chat_id=chat_id,
             enemy_id=enemy_id,
@@ -114,6 +114,28 @@ class Receive:
             player_id=chat_id,
             chat_id=chat_id,
             message=query.message
+        )
+
+    async def combat(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        query = update.callback_query
+        await query.answer()
+
+        chat_id = query.message.chat_id
+        data = query.data.replace("combat:", "")
+        emy_status, plyr_status = data.split("|")
+        emy_id , emy_opt, emy_type, emy_count = emy_status.split(":")
+        char_id, char_opt = plyr_status.split(":")
+        await bus.emit(
+            "COMBAT",
+            player_id=chat_id,
+            chat_id=chat_id,
+            message=query.message,
+            enemy_id=emy_id,
+            enemy_option=emy_opt,
+            enemy_type=emy_type,
+            enemy_count=emy_count,
+            character_id=char_id,
+            character_option=char_opt
         )
     
     
@@ -176,5 +198,12 @@ app.add_handler(
     CallbackQueryHandler(
         receive.move_to,
         pattern="^move_to:"
+    )
+)
+
+app.add_handler(
+    CallbackQueryHandler(
+        receive.combat,
+        pattern="^combat:"
     )
 )

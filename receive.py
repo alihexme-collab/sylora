@@ -121,23 +121,50 @@ class Receive:
         await query.answer()
 
         chat_id = query.message.chat_id
-        data = query.data.replace("combat:", "")
-        emy_status, plyr_status = data.split("|")
-        emy_id , emy_opt, emy_type, emy_count = emy_status.split(":")
-        char_id, char_opt = plyr_status.split(":")
+        data = query.data
+
+        if not data.startswith("cb|"):
+            await query.answer("داده‌ی مبارزه نامعتبر است.", show_alert=True)
+            return
+
+        try:
+            _, emy_id, emy_opt_code, emy_type, emy_count, char_id, char_opt_code = data.split("|")
+        except ValueError:
+            await query.answer("فرمت داده‌ی مبارزه خراب است.", show_alert=True)
+            return
+
+        option_map = {
+            "hf": "Hard Fight",
+            "nf": "Normal Fight",
+            "dg": "Dodge",
+            "df": "Defend",
+        }
+
+        enemy_option = option_map.get(emy_opt_code)
+        character_option = option_map.get(char_opt_code)
+
+        if not enemy_option or not character_option:
+            await query.answer("گزینه‌ی مبارزه نامعتبر است.", show_alert=True)
+            return
+
+        try:
+            enemy_count = int(emy_count)
+        except (TypeError, ValueError):
+            enemy_count = 1
+
         await bus.emit(
             "COMBAT",
             player_id=chat_id,
             chat_id=chat_id,
             message=query.message,
             enemy_id=emy_id,
-            enemy_option=emy_opt,
+            enemy_option=enemy_option,
             enemy_type=emy_type,
-            enemy_count=emy_count,
+            enemy_count=enemy_count,
             character_id=char_id,
-            character_option=char_opt
+            character_option=character_option
         )
-    
+
     
 
 

@@ -302,14 +302,12 @@ class Generator:
     async def generate_fight_action(self, **data):
         enemy_id = data.get("enemy_id")
         message = data.get("message")
-        chat_id = data.get("chat_id") or getattr(player, "telegram_id", None)
         enemy_type = data.get("enemy_type", "npc")
         enemy_count = data.get("enemy_count", 1)
-        character_id= data.get("character_id")
+        character_id = data.get("character_id")
         player_id = data.get("player_id")
-        enemy_option=data.get("enemy_option")
-        character_option=data.get("character_option")
-        emy=data.get("emy")
+        enemy_option = data.get("enemy_option")
+        emy = data.get("emy")
 
         text = ""
 
@@ -319,39 +317,38 @@ class Generator:
             "Dodge",
             "Defend"
         ]
+        OPTION_CODES = {
+            "Hard Fight": "hf",
+            "Normal Fight": "nf",
+            "Dodge": "dg",
+            "Defend": "df",
+        }
+
+
         if enemy_option == options[0]:
-            text += f"{emy.name} دارد یک فرم خاص به خود میگیرد چه میکنید؟"
+            text += f"{emy.name} دارد یک فرم خاص به خود می‌گیرد، چه می‌کنید؟\n"
         elif enemy_option == options[1]:
-            text += f"{emy.name}دارد فاصله خودش را با شما کم می کند، چه میکنید؟"
+            text += f"{emy.name} دارد فاصله‌اش را با شما کم می‌کند، چه می‌کنید؟\n"
         elif enemy_option == options[2]:
-            text += f"{emy.name} حرکات شما را زیر نظر گرفته است، چه میکنید؟"
+            text += f"{emy.name} حرکات شما را زیر نظر گرفته است، چه می‌کنید؟\n"
         elif enemy_option == options[3]:
-            text += f"{emy.name} فاصله خودش را دارد با شما زیاد میکند، چه میکنید؟"
+            text += f"{emy.name} دارد فاصله‌اش را با شما زیاد می‌کند، چه می‌کنید؟\n"
 
+        text += (
+            "\n"
+            "1) اجرای حمله سنگین\n"
+            "2) اجرای حمله عادی\n"
+            "3) آماده‌ی جاخالی\n"
+            "4) گارد گرفتن\n"
+        )
 
-        text+="""
-1) اجرای حمله سنگین
-2) اجرای حملات عادی
-3) آماده برای جاخالیی داردن
-4) گارد گرفتن
-"""
+        enemy_code = OPTION_CODES.get(enemy_option, "nf")
+
         buttons = [
-            {
-                "text": "1",
-                "callback" : f"combat:{enemy_id}:{enemy_option}:{enemy_type}:{enemy_count}|{character_id}:{options[0]}"
-            },
-            {
-                "text": "2",
-                "callback" : f"combat:{enemy_id}:{enemy_option}:{enemy_type}:{enemy_count}|{character_id}:{options[1]}"
-            },
-            {
-                "text": "3",
-                "callback" : f"combat:{enemy_id}:{enemy_option}:{enemy_type}:{enemy_count}|{character_id}:{options[2]}"
-            },
-            {
-                "text": "4",
-                "callback" : f"combat:{enemy_id}:{enemy_option}:{enemy_type}:{enemy_count}|{character_id}:{options[3]}"
-            },
+            {"text": "1", "callback": f"cb|{enemy_id}|{enemy_code}|{enemy_type}|{enemy_count}|{character_id}|hf"},
+            {"text": "2", "callback": f"cb|{enemy_id}|{enemy_code}|{enemy_type}|{enemy_count}|{character_id}|nf"},
+            {"text": "3", "callback": f"cb|{enemy_id}|{enemy_code}|{enemy_type}|{enemy_count}|{character_id}|dg"},
+            {"text": "4", "callback": f"cb|{enemy_id}|{enemy_code}|{enemy_type}|{enemy_count}|{character_id}|df"},
         ]
 
         await bus.emit(
@@ -359,8 +356,9 @@ class Generator:
             player_id=player_id,
             text=text,
             buttons=buttons,
-            message=message
+            message=message,
         )
+
 
 
 

@@ -319,14 +319,24 @@ class Generator:
 
         text = ""
 
-        if enemy_option == "Hard Fight":
-            text += f"{emy.name} دارد یک فرم خاص به خود می‌گیرد، چه می‌کنید؟\n"
-        elif enemy_option == "Normal Fight":
-            text += f"{emy.name} دارد فاصله‌اش را با شما کم می‌کند، چه می‌کنید؟\n"
-        elif enemy_option == "Dodge":
-            text += f"{emy.name} حرکات شما را زیر نظر گرفته است، چه می‌کنید؟\n"
-        elif enemy_option == "Defend":
-            text += f"{emy.name} دارد فاصله‌اش را با شما زیاد می‌کند، چه می‌کنید؟\n"
+        def check(enemy_option):
+            if enemy_option == "Hard Fight":
+                text += f"{emy.name} دارد یک فرم خاص به خود می‌گیرد، چه می‌کنید؟\n"
+                return True
+            elif enemy_option == "Normal Fight":
+                text += f"{emy.name} دارد فاصله‌اش را با شما کم می‌کند، چه می‌کنید؟\n"
+                return True
+            elif enemy_option == "Dodge":
+                text += f"{emy.name} حرکات شما را زیر نظر گرفته است، چه می‌کنید؟\n"
+                return True
+            elif enemy_option == "Defend":
+                text += f"{emy.name} دارد فاصله‌اش را با شما زیاد می‌کند، چه می‌کنید؟\n"
+                return True
+            
+        c = check(enemy_option)
+        if not c:
+            enemy_option = random.choice(OPTION_CODES.keys())
+            check(enemy_option)
 
         text += (
             "\n"

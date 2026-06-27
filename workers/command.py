@@ -48,13 +48,25 @@ class Command:
             async with get_db() as session:
                 try:
                     # انتخاب لوکیشن و NPC پایه
-                    loc = await session.scalar(select(Location).order_by(func.random()).limit(1))
-                    npc = await session.scalar(select(NpcStats).order_by(func.random()).limit(1))
+                    loc = await session.scalar(
+                        select(
+                            Location
+                        ).order_by(
+                            func.random()
+                        ).limit(1)
+                    )
+                    npc = await session.scalar(
+                        select(
+                            NpcStats
+                        ).order_by(
+                            func.random()
+                        ).limit(1)
+                    )
 
                     # الف) ساخت رکورد بازیکن
                     new_player = Player(
                         player_id=new_player_uuid,
-                        telegram_id=int(chat_id), # ستون عددی
+                        telegram_id=int(chat_id),
                         username=username,
                         created_at=datetime.now(),
                         role="user",
@@ -72,7 +84,8 @@ class Command:
                         name=name,
                         race="انسان",
                         character_path=loc.location_id if loc else "loc_abyss_000",
-                        age=20
+                        age=10
+                        #+0.0028
                     )
                     session.add(hero)
                     await session.flush() 
@@ -80,14 +93,14 @@ class Command:
                     # ج) ساخت رکورد استت‌ها
                     stats = CharacterStats(
                         character_id=new_character_uuid,
-                        strength=int(npc.strength * rnd.uniform(0.9, 1.1)),
-                        speed=int(npc.speed * rnd.uniform(0.9, 1.1)),
-                        defense=int(npc.defense * rnd.uniform(0.9, 1.1)),
-                        intelligence=int(npc.intelligence * rnd.uniform(0.9, 1.1)),
-                        luck=max(1, int(npc.luck * rnd.uniform(0.9, 1.1))),
-                        energy=npc.energy,
-                        mana=int(npc.mana * rnd.uniform(0.9, 1.1)),
-                        hp=int(npc.hp * rnd.uniform(0.9, 1.1)),
+                        strength=1,
+                        speed=1,
+                        defense=1,
+                        intelligence=1,
+                        luck=1,
+                        energy=50,
+                        mana=10,
+                        hp=100,
                         exp=200,
                         level=1,
                         hunting_points=0,

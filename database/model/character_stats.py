@@ -19,3 +19,6 @@ class CharacterStats(Base):
     intelligence = Column(Integer)
     luck = Column(Integer)
     character_id = Column(Text, nullable=False, primary_key=True)
+    base_hp = Column(Integer)
+    base_mana = Column(Integer)
+    base_energy = Column(Integer)

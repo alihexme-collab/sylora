@@ -33,7 +33,7 @@ class UpdateStats:
             stats = result.scalar_one_or_none()
             if stats.exp - int(price) > 0:
                 curr = getattr(stats, stat)
-                setattr(stats, stat, curr + 50)
+                setattr(stats, stat, curr + 1)
                 stats.exp -= int(price)
                 await bus.emit(
                     "GENERATE_UPDATE",
@@ -43,6 +43,8 @@ class UpdateStats:
                     stat_name=stat,
                     price=price,
                     curr=getattr(stats, stat),
+                    name=chr.name,
+                    username=plr.username
                 )
             else:
                 await bus.emit(
@@ -50,7 +52,7 @@ class UpdateStats:
                     player_id=self.chat_id,
                     chat_id=self.chat_id,
                     text="تجربه شما کافی نمی باشد",
-                    message=self.query.message
+                    message=message,
                 )
 
 

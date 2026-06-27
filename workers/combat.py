@@ -268,8 +268,8 @@ class CombatSession:
             self.set_powers()
             await self.costs()
             await self.session.commit() 
-            hero_finished = self.hero_stats.hp <= 0 or self.hero_stats.energy <= 0
-            enemy_finished = self.enemy_stats.hp <= 0 or self.enemy_stats.energy <= 0
+            hero_finished = self.hero_stats.hp <= 0 or self.hero_stats.energy <= 10
+            enemy_finished = self.enemy_stats.hp <= 0 or self.enemy_stats.energy <= 10
 
             if hero_finished or enemy_finished:
                 if self.hero_stats.hp <= 0 or self.hero_stats.energy <= 0:
@@ -452,28 +452,28 @@ class CombatSession:
         hero_energy_cost = (
             self.hero_damage *
             hero_energy_ratio *
-            0.1 *
+            0.05 *
             hero_action["energy_cost"]
         )
 
         hero_mana_cost = (
             self.hero_damage *
             hero_mana_ratio *
-            0.3 *
+            0.15 *
             hero_action["mana_cost"]
         )
 
         enemy_energy_cost = (
             self.enemy_damage *
             enemy_energy_ratio *
-            0.1 *
+            0.05 *
             enemy_action["energy_cost"]
         )
 
         enemy_mana_cost = (
             self.enemy_damage *
             enemy_mana_ratio *
-            0.3 *
+            0.15 *
             enemy_action["mana_cost"]
         )
 

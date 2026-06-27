@@ -60,15 +60,15 @@ class UpgradeRequest:
     def calc_cost(self, stat_name):
         value = getattr(self.stats, stat_name)
         base_costs = {
-            "strength": 10,
-            "speed": 10,
-            "defense": 12,
+            "strength": 15,
+            "speed": 13,
+            "defense": 14,
             "intelligence": 12,
-            "luck": 15,
+            "luck": 11,
             "charisma": 14,
-            "health": 8,
+            "hp": 10,
             "mana": 8,
-            "energy": 8,
+            "energy": 9,
         }
         base = base_costs.get(stat_name, 10)
         cost = base + (value // 5) * 5
@@ -86,10 +86,6 @@ class UpgradeRequest:
             self.stats.intelligence +
             self.stats.luck
         )
-    
-    def get_required_total_for_level(self, level):
-        return 100 + (level - 1) * 40
-        
 
 
 

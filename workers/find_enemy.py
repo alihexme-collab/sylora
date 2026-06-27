@@ -68,11 +68,11 @@ class FindEnemy:
             player_stats = result.scalar_one_or_none()
             if not player_stats:
                 return
-            if player_stats.hp <= 0:
+            if player_stats.hp <= 10 or player_stats.energy <= 10:
                 await bus.emit(
                     "SEND",
                     player_id=chat_id,
-                    text="جان شما کافی نیست، از دشمنانتان دوری کنید",
+                    text="وضعیت فعلی شما خیلی وخیم است و توان مبارزه ندارید",
                     message=message,
                     chat_id=chat_id
                 )
@@ -86,14 +86,17 @@ class FindEnemy:
 
             candidates = []
             # NPC candidates
-            result = await session.execute(
-                select(Npc).where(Npc.npc_id.like(f"npc_{region}_%"))
-            )
-            for npc in result.scalars().all():
-                candidates.append({
-                    "obj": npc,
-                    "type": "npc"
-                })
+            if player_stats.level >= 10:
+                result = await session.execute(
+                    select(Npc).where(Npc.npc_id.like(f"npc_{region}_{area}"))
+                )
+                for npc in result.scalars().all():
+                    candidates.append(
+                        {
+                            "obj": npc,
+                            "type": "npc"
+                        }
+                    )
 
             # Character candidates in same region
             result = await session.execute(

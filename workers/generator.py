@@ -121,8 +121,6 @@ class Generator:
         return "، ".join(parts) + "."
 
 
-
-
     async def generate_combat_story(self, **data):
         chat_id = data.get("chat_id")
         message = data.get("message")
@@ -201,17 +199,20 @@ class Generator:
         return sent_message
 
 
-        
-
     async def generate_combat_rewards(self, **payload):
         xp = payload.get("xp", 0)
         player = payload.get("player")
         stats: CharacterStats = payload.get("stats")
         enemy_name=payload.get("enemy_name")
         you_win = payload.get("you_win")
-        if xp <= 0:
+        level_up=payload.get("level_up")
+        args=payload.get("args")
+        name=payload.get("name")
+        message=payload.get("message")
+        chat_id=payload.get("chat_id")
+        if xp <= 0 and not level_up:
             text = "⚔️ از این مبارزه تجربه خاصی به دست نیاوردی."
-        else:
+        elif xp > 0 and not level_up:
             text = f"""{f"شما پیروز شدید و {enemy_name} را شکست دادید!" if you_win else f"شما بازنده شدید و از {enemy_name} شکست خوردید"}
     🏆 دستاورد مبارزه
 
@@ -223,12 +224,35 @@ class Generator:
     انرژی: {stats.energy}
     مانا: {stats.mana}
     """
+        elif xp == 0 and level_up:
+            text = f"""{f"شما پیروز شدید و {enemy_name} را شکست دادید!" if you_win else f"شما بازنده شدید و از {enemy_name} شکست خوردید"}
+    🏆 ارتقای سطح
+
+    شما به سطح {args["level"]} رسیدید
+
+    تمام خصیصه های آماری اصلی شما ارتقا یافتند:
+    قدرت: {stats.strength} -> {args["strength"]}
+    سرعت: {stats.speed} -> {args["speed"]}
+    استقامت: {stats.defense} -> {args["defense"]}
+    هوش: {stats.intelligence} -> {args["intelligence"]}
+    شانس: {stats.luck} -> {args["luck"]}
+    سلامتی: {stats.hp} -> {args["hp"]}
+    انرژی: {stats.energy} -> {args["energy"]}
+    مانا: {stats.mana} -> {args["mana"]}
+    """
+        buttons = [
+            {
+                "text": "خانه",
+                "callback": "home"
+            }
+        ]
 
         await bus.emit(
             "SEND",
             text=text,
-            chat_id=payload.get("chat_id"),
-            message=payload.get("message")
+            chat_id=chat_id,
+            message=message,
+            buttons=buttons
         )
 
     async def generate_upgrade_choices(self, **data):
@@ -249,27 +273,40 @@ class Generator:
         if costs.get("strength"):
             text += f"""
 💪 قدرت: {stats.strength}  | هزینه ارتقا: {costs["strength"]} XP"""
-            buttons.append({"text": "💪", "callback": f"upgrade:strength-{costs["strength"]}"})
+            buttons.append({"text": "💪", "callback": f"upgrade:strength-{costs['strength']}"})
 
         if costs.get("speed"):
             text += f"""
 🏃 سرعت: {stats.speed}  | هزینه ارتقا: {costs["speed"]} XP"""
-            buttons.append({"text": "🏃", "callback": f"upgrade:speed-{costs["speed"]}"})
+            buttons.append({"text": "🏃", "callback": f"upgrade:speed-{costs['speed']}"})
 
         if costs.get("defense"):
             text += f"""
 🛡 استقامت: {stats.defense}   | هزینه ارتقا: {costs["defense"]} XP"""
-            buttons.append({"text": "🛡", "callback": f"upgrade:defense-{costs["defense"]}"})
+            buttons.append({"text": "🛡", "callback": f"upgrade:defense-{costs['defense']}"})
 
         if costs.get("intelligence"):
             text += f"""
 🧠 هوش: {stats.intelligence}    | هزینه ارتقا: {costs["intelligence"]} XP"""
-            buttons.append({"text": "🧠", "callback": f"upgrade:intelligence-{costs["intelligence"]}"})
+            buttons.append({"text": "🧠", "callback": f"upgrade:intelligence-{costs['intelligence']}"})
 
         if costs.get("luck"):
             text += f"""
 🍀 شانس: {stats.luck}    | هزینه ارتقا: {costs["luck"]} XP"""
-            buttons.append({"text": "🍀", "callback": f"upgrade:luck-{costs["luck"]}"})
+            buttons.append({"text": "🍀", "callback": f"upgrade:luck-{costs['luck']}"})
+
+        if costs.get("hp"):
+            text += f"""
+❤️ جان: {stats.luck}    | هزینه ارتقا: {costs["luck"]} XP"""
+            buttons.append({"text": "❤️", "callback": f"upgrade:hp-{costs['hp']}"})
+        if costs.get("energy"):
+            text += f"""
+⚡ انرژی: {stats.luck}    | هزینه ارتقا: {costs["energy"]} XP"""
+            buttons.append({"text": "⚡", "callback": f"upgrade:energy-{costs['energy']}"})
+        if costs.get("mana"):
+            text += f"""
+🔮 مانا: {stats.luck}    | هزینه ارتقا: {costs["mana"]} XP"""
+            buttons.append({"text": "🔮", "callback": f"upgrade:mana-{costs['mana']}"})
         print("SEND:::")
         sent = await bus.emit(
             "SEND",
@@ -295,7 +332,8 @@ class Generator:
         stat_name=data.get("stat_name").replace("strength", "قدرت").replace("speed", "سرعت").replace("defense", "استقامت").replace("intelligence", "هوش").replace("luck", "شانس")
         price=data.get("price")
         curr=data.get("curr")
-
+        name=data.get("name")
+        username=data.get("username")
         text = f"""✅ ارتقا با موفقیت انجام شد!
 
 ویژگی «{stat_name}» با موفقیت افزایش یافت.
@@ -305,13 +343,21 @@ class Generator:
 {stat_name} فعلی:
 {curr}
 """
+        buttons = [
+            {
+                "text": "خانه",
+                "callback": "home"
+            }
+        ]
         await bus.emit(
             "EDIT",
             player_id=chat_id,
             message_id=int(message),
             text=text,
-            chat_id=chat_id
+            chat_id=chat_id,
+            buttons=buttons
         )
+        
         
     async def generate_move_choices(self, **data):
         chat_id=data.get("chat_id")
@@ -342,13 +388,21 @@ class Generator:
 توضیحات این منطقه:
 {loc.description}
 """
+        buttons = [
+            {
+                "text": "خانه",
+                "callback": "home"
+            }
+        ]
         await bus.emit(
             "SEND",
             player_id=chat_id,
             chat_id=chat_id,
             message=message,
-            text=text
+            text=text,
+            buttons=buttons
         )
+        
 
     async def generate_fight_action(self, **data):
         enemy_id = data.get("enemy_id")
@@ -457,9 +511,6 @@ class Generator:
             buttons=buttons,
             message=message,
         )
-
-
-
 
 
 gen = Generator()

@@ -4,6 +4,7 @@ from sqlalchemy import select
 from database.db_manager import get_db
 from database.model import *
 from .bus import bus
+from .callback_store import callback_store
 
 def compare_power(player_power, enemy_power):
     ratio = enemy_power / max(player_power, 1)
@@ -187,10 +188,14 @@ class FindEnemy:
                     if enemy_type == "npc"
                     else enemy.character_id
                 )
-
+                cid = callback_store.put({
+                    "enemy_type": enemy_type,
+                    "enemy_id": uid,
+                    "hero_id": hero.character_id
+                })
                 buttons.append({
                     "text": name,
-                    "callback": f"fight:{enemy_type}:{uid}:{hero.character_id}"
+                    "callback": f"fight:{cid}"
                 })
             await bus.emit(
                 "SEND",

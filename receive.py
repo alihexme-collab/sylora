@@ -3,8 +3,7 @@ from workers.loader import *
 from telegram.ext import *
 from workers import *
 from combat_cache import get_combat_session, delete_combat_session
-
-
+from workers.callback_store import callback_store
 class Receive:
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -64,8 +63,15 @@ class Receive:
         query = update.callback_query
         await query.answer()
         chat_id = query.message.chat_id
-        data = query.data.split(':')
-        _, enemy_type, enemy_id, character_id = data
+        _, cid = query.data.split(":")
+
+        data = callback_store.get(cid)
+        if not data:
+            return
+
+        enemy_type = data["enemy_type"]
+        enemy_id = data["enemy_id"]
+        hero_id = data["hero_id"]
         await bus.emit(
             "START_COMBAT",
             player_id=chat_id,
@@ -74,7 +80,7 @@ class Receive:
             enemy_type=enemy_type,
             enemy_count=1,
             message=query.message,
-            character_id=character_id
+            character_id=hero_id
         )
 
     async def move(self, update: Update, context: ContextTypes.DEFAULT_TYPE):

@@ -19,3 +19,7 @@ class NpcStats(Base):
     black_knowledge_level = Column(Integer)
     intelligence = Column(Integer)
     luck = Column(Integer)
+    base_hp = Column(Integer)
+    base_mana = Column(Integer)
+    base_energy = Column(Integer)
+

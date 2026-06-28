@@ -12,3 +12,6 @@ class EnemyStats(Base):
     energy = Column(Integer)
     hp = Column(Integer)
     luck = Column(Integer)
+    base_hp = Column(Integer)
+    base_mana = Column(Integer)
+    base_energy = Column(Integer)

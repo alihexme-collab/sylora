@@ -207,7 +207,6 @@ class Generator:
         you_win = payload.get("you_win")
         level_up=payload.get("level_up")
         args=payload.get("args")
-        name=payload.get("name")
         message=payload.get("message")
         chat_id=payload.get("chat_id")
         if xp <= 0 and not level_up:

@@ -69,8 +69,6 @@ class BattleRewards:
             you_win=self.is_hero_winner(),
             enemy_name=self.enemy.name,
             level_up=level_up,
-            args=args,
-            name=self.hero.name
         )
 
 

@@ -14,9 +14,9 @@ class Sleep:
         await self.get_character()
         if self.stats.exp >= 100:
             self.stats.exp -= 100
-            self.stats.hp += 2000
-            self.stats.mana += 500
-            self.stats.energy += 50
+            self.stats.hp = self.stats.base_hp
+            self.stats.mana = self.stats.base_mana
+            self.stats.energy = self.stats.base_energy
             self.session.commit()
             await bus.emit(
                  "SEND",

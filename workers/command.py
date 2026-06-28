@@ -104,7 +104,10 @@ class Command:
                         exp=200,
                         level=1,
                         hunting_points=0,
-                        gold=100 # مقدار اولیه ثابت یا رندوم
+                        gold=100,
+                        base_energy=50,
+                        base_mana=10,
+                        base_hp=100
                     )
                     session.add(stats)
                     await session.flush() 

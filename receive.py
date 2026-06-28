@@ -195,9 +195,9 @@ class Receive:
             text=f"/start {chat_id}",
             player_id=chat_id,
             chat_id=chat_id,
-            username=update.message.from_user.username,
-            name=update.message.from_user.full_name,
-            message=update.message
+            username=query.message.from_user.username,
+            name=query.message.from_user.full_name,
+            message=query.message
         )
 
 

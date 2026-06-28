@@ -185,6 +185,21 @@ class Receive:
 
         delete_combat_session(session_id)
 
+    async def home(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        query = update.callback_query
+        await query.answer()
+        chat_id = query.message.chat_id
+
+        await bus.emit(
+            "COMMAND",
+            text=f"/start {chat_id}",
+            player_id=chat_id,
+            chat_id=chat_id,
+            username=update.message.from_user.username,
+            name=update.message.from_user.full_name,
+            message=update.message
+        )
+
 
 
     
@@ -254,5 +269,11 @@ app.add_handler(
     CallbackQueryHandler(
         receive.combat,
         pattern="^cb|"
+    )
+)
+app.add_handler(
+    CallbackQueryHandler(
+        receive.home,
+        pattern="^home$"
     )
 )

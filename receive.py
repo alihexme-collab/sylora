@@ -80,7 +80,8 @@ class Receive:
             enemy_type=enemy_type,
             enemy_count=1,
             message=query.message,
-            character_id=hero_id
+            character_id=hero_id,
+            turn=0
         )
 
     async def move(self, update: Update, context: ContextTypes.DEFAULT_TYPE):

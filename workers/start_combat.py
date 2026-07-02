@@ -15,7 +15,8 @@ class StartCombat:
         player_id = data.get("player_id")
         enemy_option=data.get("enemy_option"),
         character_option=data.get("character_option")
-
+        turn = data.get("turn")
+        turn+=1
         async with get_db() as session:
             query=select(Character).where(Character.character_id == character_id)
             result = await session.execute(query)
@@ -34,7 +35,7 @@ class StartCombat:
                 "Hard Fight",
                 "Normal Fight",
                 "Dodge",
-                "Defend"
+                "Defend" 
             ]
             enemy_option = rnd.choice(options)
         await bus.emit(
@@ -50,6 +51,7 @@ class StartCombat:
             character_option=character_option,
             hero=hero,
             emy=emy,
+            turn=turn
         )
 
     

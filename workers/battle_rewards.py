@@ -134,7 +134,7 @@ class BattleRewards:
 
 
     def duration_multiplier(self) -> float:
-        rounds = self.details.get("rounds", 1)
+        rounds = self.details.get("turn", 1)
 
         if rounds <= 1:
             return 0.35

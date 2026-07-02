@@ -15,7 +15,7 @@ class Combat:
         player_id = data.get("player_id")
         character_option = data.get("character_option")
         enemy_option = data.get("enemy_option")
-
+        turn=data.get("turn", 1)
         async with get_db() as session:
             player_query = select(Player).where(Player.telegram_id == player_id)
             player_result = await session.execute(player_query)
@@ -49,6 +49,7 @@ class Combat:
             enemy_option=enemy_option,
             character_id=character_id,
             enemy_id=enemy_id,
+            turn=turn
         )
         await session.calculate()
 
@@ -68,6 +69,7 @@ class CombatSession:
                  enemy_id,
                  enemy_type="npc", 
                  enemy_count=1,
+                 turn=1
                  ):
         self.OPTIONS = {
             "Hard Fight",
@@ -132,6 +134,7 @@ class CombatSession:
 
         self.character_id = character_id
         self.enemy_id = enemy_id
+        self.turn=turn
 
 
     async def _get_infos(self, uid: str, entity_type: str):
@@ -502,7 +505,6 @@ class CombatSession:
         self.enemy_stats.energy = max(0, self.enemy_stats.energy - enemy_energy_cost)
         self.enemy_stats.mana = max(0, self.enemy_stats.mana - enemy_mana_cost)
         self.enemy_stats.hp = max(0, self.enemy_stats.hp - enemy_hp_cost)
-
         self.details = {
             "turn": getattr(self, "turn", 1),
             "options": {

@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+backup_restore.py
 
 # Virtual Environment
 venv/
@@ -12,6 +13,7 @@ inv/
 # Environment variables
 .env
 .env.*
+*.sql
 
 # IDE
 .vscode/

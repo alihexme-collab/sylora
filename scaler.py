@@ -29,9 +29,9 @@ async def rebalance_enemy_stats():
             e.hp = scale(e.hp, factor)
             e.luck = scale(e.luck, factor)
 
-            e.base_hp = scale(e.base_hp, factor)
-            e.base_mana = scale(e.base_mana, factor)
-            e.base_energy = scale(e.base_energy, factor)
+            e.base_hp = scale(e.base_hp, factor, e.hp)
+            e.base_mana = scale(e.base_mana, factor, e.mana)
+            e.base_energy = scale(e.base_energy, factor, e.energy)
 
         await session.commit()
 

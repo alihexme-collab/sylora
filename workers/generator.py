@@ -5,7 +5,6 @@ import random
 from combat_cache import get_combat_session, create_combat_session
 
 class Generator:
-
     async def generate_start(self, **data):
 
         chat_id = data.get("chat_id")
@@ -20,7 +19,7 @@ class Generator:
             f"استقامت: {stats.defense:<10} | جان: {stats.hp}\n"
             f"هوش:   {stats.intelligence:<10} | شانس: {stats.luck}\n"
             f"انرژی:  {stats.energy:<10} | مانا: {stats.mana}\n"
-            f"امتیاز شکار: {stats.hunting_points:<10} | تجربه: {stats.exp}"
+            f"امتیاز شکار: {stats.hunting_points:<10} | تجربه: {stats.exp}/{100 + (stats.level - 1) * 40}"
         )
 
         text = (

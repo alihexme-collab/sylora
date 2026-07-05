@@ -34,6 +34,7 @@ class Move:
                     chat_id=self.chat_id,
                     text=f"شما انرژی کافی برای رفتن به {loc.name} ندارید"
                 )
+                return
 
 
         await bus.emit(
@@ -93,7 +94,6 @@ class Move:
             message=self.message,
             buttons=buttons
         )
-
 
 
     async def get_character(self):

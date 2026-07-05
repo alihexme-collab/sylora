@@ -188,7 +188,7 @@ class Receive:
         query = update.callback_query
         await query.answer()
         chat_id = query.message.chat.id
-
+        print(":"*100)
         await bus.emit(
             "COMMAND",
             text=f"/start {chat_id}",
@@ -198,6 +198,7 @@ class Receive:
             name=query.from_user.full_name,
             message=query.message
         )
+        print(":"*100)
 
 
 

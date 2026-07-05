@@ -41,7 +41,7 @@ class UpgradeRequest:
         costs = {}
         for stat in  stats:
             item = self.calc_cost(stat)
-            if item is not None:
+            if item[1]:
                 costs.update({stat: [item, True]})
             else:
                 costs.update({stat: [item, False]})
@@ -74,8 +74,7 @@ class UpgradeRequest:
         }
         base = base_costs.get(stat_name, 10)
         cost = base + (value // 5) * 5
-        if cost < self.stats.exp:
-            return cost
+        return cost, cost < self.stats.exp
         
     def get_total_stats(self):
         return (

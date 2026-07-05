@@ -8,7 +8,7 @@ class Receive:
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         print("===== RECIVED Start ============")
-        await update.message.reply_text("Handler دریافت شد")
+
 
         chat_id = update.message.chat_id
 

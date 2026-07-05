@@ -47,3 +47,4 @@ build/
 # Secrets
 *.pem
 *.key
+set_enemy_powers.py

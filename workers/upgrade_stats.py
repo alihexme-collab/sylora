@@ -34,9 +34,9 @@ class UpgradeRequest:
             "defense",
             "intelligence",
             "luck",
-            "hp",
-            "mana",
-            "energy",
+            "base_hp",
+            "base_mana",
+            "base_energy",
         ]
         costs = {}
         for stat in  stats:
@@ -66,9 +66,9 @@ class UpgradeRequest:
             "intelligence": 12,
             "luck": 11,
             "charisma": 14,
-            "hp": 10,
-            "mana": 8,
-            "energy": 9,
+            "base_hp": 10,
+            "base_mana": 8,
+            "base_energy": 9,
         }
         base = base_costs.get(stat_name, 10)
         cost = base + (value // 5) * 5

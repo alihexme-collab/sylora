@@ -295,15 +295,15 @@ class Generator:
 
         if costs.get("hp"):
             text += f"""
-❤️ جان: {stats.luck}    | هزینه ارتقا: {costs["luck"]} XP"""
+❤️ جان: {stats.luck}    | هزینه ارتقا: {costs["base_hp"]} XP"""
             buttons.append({"text": "❤️", "callback": f"upgrade:hp-{costs['hp']}"})
         if costs.get("energy"):
             text += f"""
-⚡ انرژی: {stats.luck}    | هزینه ارتقا: {costs["energy"]} XP"""
+⚡ انرژی: {stats.luck}    | هزینه ارتقا: {costs["base_energy"]} XP"""
             buttons.append({"text": "⚡", "callback": f"upgrade:energy-{costs['energy']}"})
         if costs.get("mana"):
             text += f"""
-🔮 مانا: {stats.luck}    | هزینه ارتقا: {costs["mana"]} XP"""
+🔮 مانا: {stats.luck}    | هزینه ارتقا: {costs["base_mana"]} XP"""
             buttons.append({"text": "🔮", "callback": f"upgrade:mana-{costs['mana']}"})
         print("SEND:::")
         sent = await bus.emit(

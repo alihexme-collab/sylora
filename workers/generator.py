@@ -218,9 +218,9 @@ class Generator:
     ✨ {xp} تجربه به دست آوردی.
 
     منابع باقیمانده:
-    سلامتی: {stats.hp}
-    انرژی: {stats.energy}
-    مانا: {stats.mana}
+    سلامتی: {int(stats.hp)}
+    انرژی: {int(stats.energy)}
+    مانا: {int(stats.mana)}
     """
         elif xp == 0 and level_up:
             text = f"""{f"شما پیروز شدید و {enemy_name} را شکست دادید!" if you_win else f"شما بازنده شدید و از {enemy_name} شکست خوردید"}

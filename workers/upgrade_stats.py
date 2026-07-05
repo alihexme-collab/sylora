@@ -74,8 +74,7 @@ class UpgradeRequest:
         }
         base = base_costs.get(stat_name, 10)
         cost = base + (value // 5) * 5
-        if cost < self.stats.exp:
-            return cost
+        return cost
         
     def get_total_stats(self):
         return (

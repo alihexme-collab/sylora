@@ -6,7 +6,7 @@ from config import BOT_TOKEN, BOT_BASE_URL
 from workers.tick import tick
 
 async def post_init(app):
-    task = asyncio.create_task(tick.tick())
+    task = await asyncio.create_task(tick.tick())
     app.bot_data["tick_task"] = task
 
 async def post_shutdown(app):

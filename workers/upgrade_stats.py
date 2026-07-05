@@ -42,7 +42,9 @@ class UpgradeRequest:
         for stat in  stats:
             item = self.calc_cost(stat)
             if item is not None:
-                costs.update({stat: item})
+                costs.update({stat: [item, True]})
+            else:
+                costs.update({stat: [item, False]})
         total_stats = self.get_total_stats()
         reqire_level = 100 + (self.stats.level - 1) * 40
         print("SHOW_UPGADE_COSTS")

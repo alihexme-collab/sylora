@@ -268,43 +268,46 @@ class Generator:
 سطح: {stats.level}
 مجموع آمار: {total_stats}
 """
-        if costs.get("strength"):
-            text += f"""
-💪 قدرت: {stats.strength}  | هزینه ارتقا: {costs["strength"]} XP"""
-            buttons.append({"text": "💪", "callback": f"upgrade:strength-{costs['strength']}"})
+        text += f"""
+💪 قدرت: {stats.strength}  | هزینه ارتقا: {costs["strength"][0]} XP"""
+        if costs.get("strength")[1]:
+            buttons.append({"text": "💪", "callback": f"upgrade:strength-{costs['strength'][0]}"})
 
-        if costs.get("speed"):
-            text += f"""
-🏃 سرعت: {stats.speed}  | هزینه ارتقا: {costs["speed"]} XP"""
-            buttons.append({"text": "🏃", "callback": f"upgrade:speed-{costs['speed']}"})
+        text += f"""
+🏃 سرعت: {stats.speed}  | هزینه ارتقا: {costs["speed"][0]} XP"""
+        if costs.get("speed")[1]:
+            buttons.append({"text": "🏃", "callback": f"upgrade:speed-{costs['speed'][0]}"})
 
-        if costs.get("defense"):
-            text += f"""
-🛡 استقامت: {stats.defense}   | هزینه ارتقا: {costs["defense"]} XP"""
-            buttons.append({"text": "🛡", "callback": f"upgrade:defense-{costs['defense']}"})
+        text += f"""
+🛡 استقامت: {stats.defense}   | هزینه ارتقا: {costs["defense"][0]} XP"""
+        if costs.get("defense")[1]:
+            buttons.append({"text": "🛡", "callback": f"upgrade:defense-{costs['defense'][0]}"})
 
-        if costs.get("intelligence"):
-            text += f"""
-🧠 هوش: {stats.intelligence}    | هزینه ارتقا: {costs["intelligence"]} XP"""
-            buttons.append({"text": "🧠", "callback": f"upgrade:intelligence-{costs['intelligence']}"})
+        text += f"""
+🧠 هوش: {stats.intelligence}    | هزینه ارتقا: {costs["intelligence"][0]} XP"""
+        if costs.get("intelligence")[1]:
+            buttons.append({"text": "🧠", "callback": f"upgrade:intelligence-{costs['intelligence'][0]}"})
 
-        if costs.get("luck"):
-            text += f"""
-🍀 شانس: {stats.luck}    | هزینه ارتقا: {costs["luck"]} XP"""
-            buttons.append({"text": "🍀", "callback": f"upgrade:luck-{costs['luck']}"})
+        text += f"""
+🍀 شانس: {stats.luck}    | هزینه ارتقا: {costs["luck"][0]} XP"""
+        if costs.get("luck")[1]:
+            buttons.append({"text": "🍀", "callback": f"upgrade:luck-{costs['luck'][0]}"})
 
-        if costs.get("hp"):
-            text += f"""
-❤️ جان: {stats.luck}    | هزینه ارتقا: {costs["base_hp"]} XP"""
-            buttons.append({"text": "❤️", "callback": f"upgrade:hp-{costs['hp']}"})
-        if costs.get("energy"):
-            text += f"""
-⚡ انرژی: {stats.luck}    | هزینه ارتقا: {costs["base_energy"]} XP"""
-            buttons.append({"text": "⚡", "callback": f"upgrade:energy-{costs['energy']}"})
-        if costs.get("mana"):
-            text += f"""
-🔮 مانا: {stats.luck}    | هزینه ارتقا: {costs["base_mana"]} XP"""
-            buttons.append({"text": "🔮", "callback": f"upgrade:mana-{costs['mana']}"})
+        text += f"""
+❤️ جان: {stats.luck}    | هزینه ارتقا: {costs["base_hp"][0]} XP"""
+        if costs.get("base_hp")[1]:
+            buttons.append({"text": "❤️", "callback": f"upgrade:hp-{costs['base_hp'][0]}"})
+
+        text += f"""
+⚡ انرژی: {stats.luck}    | هزینه ارتقا: {costs["base_energy"][0]} XP"""
+        if costs.get("base_energy")[1]:
+            buttons.append({"text": "⚡", "callback": f"upgrade:energy-{costs['base_energy'][0]}"})
+
+        text += f"""
+🔮 مانا: {stats.luck}    | هزینه ارتقا: {costs["base_mana"][0]} XP"""
+        if costs.get("base_mana")[1]:
+            buttons.append({"text": "🔮", "callback": f"upgrade:mana-{costs['base_mana'][0]}"})
+
         print("SEND:::")
         sent = await bus.emit(
             "SEND",

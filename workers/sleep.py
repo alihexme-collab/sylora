@@ -32,9 +32,35 @@ class Sleep:
                 # Energy
                 stats.energy = min(stats.energy + 5, stats.base_energy)
 
-            await session.commit()
+            query = select(EnemyStats)
 
-                        
+            results = await session.execute(query)
+
+            for stats in results.all():
+                # HP
+                stats.hp = min(stats.hp + 10, stats.base_hp)
+
+                # Mana
+                stats.mana = min(stats.mana + 1, stats.base_mana)
+
+                # Energy
+                stats.energy = min(stats.energy + 5, stats.base_energy)
+
+            query = select(NpcStats)
+
+            results = await session.execute(query)
+
+            for stats in results.all():
+                # HP
+                stats.hp = min(stats.hp + 10, stats.base_hp)
+
+                # Mana
+                stats.mana = min(stats.mana + 1, stats.base_mana)
+
+                # Energy
+                stats.energy = min(stats.energy + 5, stats.base_energy)
+
+            await session.commit()                  
                    
 
     async def _sleep(self):
@@ -90,10 +116,6 @@ class Sleep:
                 select(CharacterStats).where(CharacterStats.character_id == self.character.character_id)
             )
             self.stats = stats.scalar_one_or_none()
-
-
-    
-
 
 
 move = Sleep()

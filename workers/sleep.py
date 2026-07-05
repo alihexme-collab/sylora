@@ -12,8 +12,16 @@ class Sleep:
 
     async def _sleep(self):
         await self.get_character()
-        if self.stats.exp >= 100:
-            self.stats.exp -= 100
+        hp = abs(self.stats.base_hp - self.stats.hp)
+        mana = abs(self.stats.base_mana - self.stats.mana)
+        energy = abs(self.stats.base_energy - self.stats.energy)
+        exp_cost = int(
+             hp * .5 + 
+             mana * 2 +
+             energy
+        )
+        if self.stats.exp >= exp_cost:
+            self.stats.exp -= exp_cost
             self.stats.hp = self.stats.base_hp
             self.stats.mana = self.stats.base_mana
             self.stats.energy = self.stats.base_energy
@@ -23,7 +31,7 @@ class Sleep:
                  player_id=self.chat_id,
                  message=self.message,
                  text=f"""
-از شما 100 واحد تجربه کاسته شد
+از شما {exp_cost} واحد تجربه کاسته شد
 
 وضیت فعلی منابع شما:
 سلامتی: {self.stats.hp}

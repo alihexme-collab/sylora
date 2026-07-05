@@ -7,8 +7,6 @@ from workers.callback_store import callback_store
 class Receive:
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        print("Received")
-
         chat_id = update.message.chat_id
 
         await bus.emit(
@@ -25,7 +23,7 @@ class Receive:
         query = update.callback_query
         await query.answer()
 
-        chat_id = query.message.chat_id
+        chat_id = query.message.chat.id
 
         await bus.emit(
             "FIGHT",
@@ -38,7 +36,7 @@ class Receive:
         query = update.callback_query
         await query.answer()
 
-        chat_id = query.message.chat_id
+        chat_id = query.message.chat.id
 
         await bus.emit(
             "UPGRADE",
@@ -50,7 +48,7 @@ class Receive:
     async def update(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
         await query.answer()
-        chat_id = query.message.chat_id
+        chat_id = query.message.chat.id
 
         await bus.emit(
             "UPDATE",
@@ -62,7 +60,7 @@ class Receive:
     async def choose_enemy(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
         await query.answer()
-        chat_id = query.message.chat_id
+        chat_id = query.message.chat.id
         _, cid = query.data.split(":")
 
         data = callback_store.get(cid)
@@ -88,7 +86,7 @@ class Receive:
         query = update.callback_query
         await query.answer()
 
-        chat_id = query.message.chat_id
+        chat_id = query.message.chat.id
 
         await bus.emit(
             "MOVE",
@@ -101,7 +99,7 @@ class Receive:
         query = update.callback_query
         await query.answer()
 
-        chat_id = query.message.chat_id
+        chat_id = query.message.chat.id
 
         await bus.emit(
             "MOVE_TO",
@@ -115,7 +113,7 @@ class Receive:
         query = update.callback_query
         await query.answer()
 
-        chat_id = query.message.chat_id
+        chat_id = query.message.chat.id
 
         await bus.emit(
             "SLEEP",
@@ -189,7 +187,7 @@ class Receive:
     async def home(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
         await query.answer()
-        chat_id = query.message.chat_id
+        chat_id = query.message.chat.id
 
         await bus.emit(
             "COMMAND",

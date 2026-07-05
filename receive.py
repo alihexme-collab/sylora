@@ -7,6 +7,7 @@ from workers.callback_store import callback_store
 class Receive:
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        print("===== RECIVED Start ============")
         chat_id = update.message.chat_id
 
         await bus.emit(

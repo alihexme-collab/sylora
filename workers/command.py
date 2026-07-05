@@ -101,7 +101,7 @@ class Command:
                         energy=50,
                         mana=10,
                         hp=100,
-                        exp=200,
+                        exp=25,
                         level=1,
                         hunting_points=0,
                         gold=100,

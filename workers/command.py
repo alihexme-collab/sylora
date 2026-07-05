@@ -5,7 +5,7 @@ from sqlalchemy import select, func
 from datetime import datetime
 import random as rnd
 import uuid
-
+from mtranslate import translate
 
 class Command:
 
@@ -16,12 +16,13 @@ class Command:
         username = data["username"]
         name = data.get("name")
         message = data.get("message")
-
+        
         cmd = text.split()[0].lower()
 
         match cmd:
 
             case "/start":
+                name = translate(name, 'fa')
                 await self.start(chat_id, username, name, message)
 
     async def start(self, chat_id, username, name, message):

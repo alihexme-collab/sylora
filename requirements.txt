@@ -4,3 +4,4 @@ asyncpg
 sqlalchemy[asyncio]
 python-dotenv
 pydantic
+mtranslate

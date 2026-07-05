@@ -44,7 +44,7 @@ class UpgradeRequest:
             if item is not None:
                 costs.update({stat: item})
         total_stats = self.get_total_stats()
-        reqire_level = self.get_required_total_for_level(self.stats.level)
+        reqire_level = 100 + (level - 1) * 40
         print("SHOW_UPGADE_COSTS")
         await bus.emit(
             "SHOW_UPGADE_COSTS",

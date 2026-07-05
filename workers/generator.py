@@ -294,17 +294,17 @@ class Generator:
             buttons.append({"text": "🍀", "callback": f"upgrade:luck-{costs['luck'][0]}"})
 
         text += f"""
-❤️ جان: {stats.luck}    | هزینه ارتقا: {costs["base_hp"][0]} XP"""
+❤️ جان: {stats.base_hp}    | هزینه ارتقا: {costs["base_hp"][0]} XP"""
         if costs.get("base_hp")[1]:
             buttons.append({"text": "❤️", "callback": f"upgrade:hp-{costs['base_hp'][0]}"})
 
         text += f"""
-⚡ انرژی: {stats.luck}    | هزینه ارتقا: {costs["base_energy"][0]} XP"""
+⚡ انرژی: {stats.base_energy}    | هزینه ارتقا: {costs["base_energy"][0]} XP"""
         if costs.get("base_energy")[1]:
             buttons.append({"text": "⚡", "callback": f"upgrade:energy-{costs['base_energy'][0]}"})
 
         text += f"""
-🔮 مانا: {stats.luck}    | هزینه ارتقا: {costs["base_mana"][0]} XP"""
+🔮 مانا: {stats.base_mana}    | هزینه ارتقا: {costs["base_mana"][0]} XP"""
         if costs.get("base_mana")[1]:
             buttons.append({"text": "🔮", "callback": f"upgrade:mana-{costs['base_mana'][0]}"})
 

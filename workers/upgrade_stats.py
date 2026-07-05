@@ -42,9 +42,9 @@ class UpgradeRequest:
         for stat in  stats:
             item = self.calc_cost(stat)
             if item[1]:
-                costs.update({stat: [item, True]})
+                costs.update({stat: [item[0], True]})
             else:
-                costs.update({stat: [item, False]})
+                costs.update({stat: [item[0], False]})
         total_stats = self.get_total_stats()
         reqire_level = 100 + (self.stats.level - 1) * 40
         print("SHOW_UPGADE_COSTS")

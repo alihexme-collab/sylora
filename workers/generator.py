@@ -330,7 +330,17 @@ class Generator:
     async def generate_update(self, **data):
         chat_id=data.get("chat_id")
         message=data.get("message")
-        stat_name=data.get("stat_name").replace("strength", "قدرت").replace("speed", "سرعت").replace("defense", "استقامت").replace("intelligence", "هوش").replace("luck", "شانس")
+        stat_name=(
+            data.get("stat_name")
+            .replace("strength", "قدرت")
+            .replace("speed", "سرعت")
+            .replace("defense", "استقامت")
+            .replace("intelligence", "هوش")
+            .replace("luck", "شانس")
+            .replace("base_hp", "جان")
+            .replace("base_mana", "مانا")
+            .replace("base_energy", "انرژی")
+        )
         price=data.get("price")
         curr=data.get("curr")
         name=data.get("name")

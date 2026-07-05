@@ -33,7 +33,9 @@ class UpdateStats:
             stats = result.scalar_one_or_none()
             if stats.exp - int(price) > 0:
                 curr = getattr(stats, stat)
-                setattr(stats, stat, curr + 1)
+                setattr(stats, stat, curr + max(
+                    curr / 10, 1
+                ))
                 stats.exp -= int(price)
                 await bus.emit(
                     "GENERATE_UPDATE",

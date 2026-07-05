@@ -11,31 +11,29 @@ class Sleep:
         async with get_db() as self.session:
             await self._sleep()
     async def tick(self, **data):
-         async with get_db() as session:
-              session: AsyncSession
-              query = select(
-                   Character,
-                   CharacterStats,
-              ).where(
-                   Character.is_alive == True and Character.character_id == CharacterStats.character_id
-              )
-              results = await session.execute(query)
-              for result in results.scalars().all():
-                    if result.hp + 10 > result.base_hp:
-                        result.hp = result.base_hp
-                    else:
-                        result.hp += 10
+        async with get_db() as session:
+            session: AsyncSession
 
-                    if result.mana + 1 > result.base_mana:
-                        result.mana = result.base_mana
-                    else:
-                        result.mana += 1
+            query = (
+                select(Character, CharacterStats)
+                .join(CharacterStats, Character.character_id == CharacterStats.character_id)
+                .where(Character.is_alive == True)
+            )
 
-                    if result.energy + 5 > result.base_energy:
-                        result.energy = result.base_energy
-                    else:
-                        result.energy += 5
-                    await session.commit()
+            results = await session.execute(query)
+
+            for char, stats in results.all():
+                # HP
+                stats.hp = min(stats.hp + 10, stats.base_hp)
+
+                # Mana
+                stats.mana = min(stats.mana + 1, stats.base_mana)
+
+                # Energy
+                stats.energy = min(stats.energy + 5, stats.base_energy)
+
+            await session.commit()
+
                         
                    
 

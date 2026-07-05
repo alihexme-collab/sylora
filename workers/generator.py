@@ -296,7 +296,7 @@ class Generator:
         text += f"""
 ❤️ جان: {stats.base_hp}    | هزینه ارتقا: {costs["base_hp"][0]} XP"""
         if costs.get("base_hp")[1]:
-            buttons.append({"text": "❤️", "callback": f"upgrade:hp-{costs['base_hp'][0]}"})
+            buttons.append({"text": f"❤️{costs.get('base_hp')[1]}", "callback": f"upgrade:hp-{costs['base_hp'][0]}"})
 
         text += f"""
 ⚡ انرژی: {stats.base_energy}    | هزینه ارتقا: {costs["base_energy"][0]} XP"""

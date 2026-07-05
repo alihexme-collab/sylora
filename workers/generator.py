@@ -266,7 +266,7 @@ class Generator:
 
 تجربه فعلی: {stats.exp}
 سطح: {stats.level}
-مجموع آمار: {total_stats} / {reqire_level}
+مجموع آمار: {total_stats}
 """
         if costs.get("strength"):
             text += f"""

@@ -53,7 +53,7 @@ class Tick:
             await bus.emit(
                 "TICK",
                 player_id=0,
-                data=self.data,
+                datatime=self.data,
             )
 
 tick = Tick()

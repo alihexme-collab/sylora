@@ -19,13 +19,15 @@ class Move:
         loc = data.split(":")[1]
         async with get_db() as self.session:
             character: Character = await self.get_character()
+            loc = await self.session.execute(
+                select(Location)
+                .where(
+                    Location.location_id == loc)
+            )
+            loc = loc.scalar_one_or_none()
             if self.stats.energy >= 20:
                 self.stats.energy -= 20
                 character.character_path = loc
-                loc = await self.session.execute(
-                    select(Location).where(Location.location_id == loc)
-                )
-                loc = loc.scalar_one_or_none()
             else:
                 await bus.emit(
                     "SEND",

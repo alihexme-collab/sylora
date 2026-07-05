@@ -8,6 +8,8 @@ class Receive:
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         print("===== RECIVED Start ============")
+        await update.message.reply_text("Handler دریافت شد")
+
         chat_id = update.message.chat_id
 
         await bus.emit(
@@ -269,9 +271,10 @@ app.add_handler(
 app.add_handler(
     CallbackQueryHandler(
         receive.combat,
-        pattern="^cb|"
+        pattern=r"^cb\|"
     )
 )
+
 app.add_handler(
     CallbackQueryHandler(
         receive.home,

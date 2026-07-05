@@ -83,6 +83,7 @@ class Sender:
                         callback_data=b.get("callback")
                     )
                 ])
+        print(rows)
 
         return InlineKeyboardMarkup(rows)
 

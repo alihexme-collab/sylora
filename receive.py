@@ -329,26 +329,30 @@ class Receive:
 
         # لینک دعوت اختصاصی
         ref_link = f"https://t.me/{BOT_USERNAME}?start=ref_{user_id}"
-
+        REWARDS = {
+            "upgrade_points": 1,         # امتیاز ارتقای عمومی
+            "stat_points": 3,            # امتیاز ویژگی‌های آماری (Strength, Speed, ...)
+            "referral_reward_points": 5  # امتیازهای ویژه معرف
+        }
         # اگر این مقادیر را در کلاس تعریف نکرده‌ای، اینجا مستقیم بگذار
-        upgrade_points = getattr(self, "REFERRAL_UPGRADE_POINTS", 1)
-        stat_points = getattr(self, "REFERRAL_STAT_POINTS", 1)
-        referral_reward_points = getattr(self, "REFERRAL_REWARD_POINTS", 1)
-
+        upgrade_points = REWARDS["upgrade_points"]
+        stat_points = REWARDS["stat_points"]
+        referral_reward_points = REWARDS["referral_reward_points"]
         # متن دعوت با پاداش امتیازی
         text = (
-            "⚔️ <b>اتحاد ماجراجویان | سیستم دعوت</b>\n\n"
-            "ماجراجوی گرامی! با دعوت هم‌رزمان خود به این دنیای پرمخاطره، ارتش خود را نیرومندتر کنید.\n\n"
-            "🎁 <b>پاداش دعوت:</b>\n"
-            f"به ازای هر بازیکن جدیدی که با لینک شما وارد بازی شود و برای اولین‌بار سفر خود را آغاز کند،\n"
-            f"<b>+{upgrade_points} upgrade points</b>\n"
-            f"<b>+{stat_points} stat points</b>\n"
-            f"<b>+{referral_reward_points} referral reward points</b>\n"
-            "به عنوان پاداش دریافت خواهید کرد.\n\n"
-            "🔗 <b>لینک دعوت اختصاصی شما:</b>\n"
+            "⚔️ <b>اتحاد ماجراجویان | دعوت از همراهان</b>\n\n"
+            "قهرمان گرامی، هر همراه تازه‌ای که با دعوت شما قدم به این جهان بگذارد، "
+            "نیروی اتحاد شما را افزایش می‌دهد و پاداشی ویژه برایتان به همراه خواهد داشت.\n\n"
+            "🎁 <b>پاداش هر دعوت موفق:</b>\n"
+            f"• <b>+{upgrade_points}</b> امتیاز ارتقا\n"
+            f"• <b>+{stat_points}</b> امتیاز ویژگی‌ها\n"
+            f"• <b>+{referral_reward_points}</b> امتیاز ویژه دعوت\n\n"
+            "این پاداش زمانی ثبت می‌شود که بازیکن جدید برای اولین‌بار با لینک اختصاصی شما وارد بازی شود.\n\n"
+            "🔗 <b>لینک دعوت اختصای شما:</b>\n"
             f"<code>{ref_link}</code>\n\n"
-            "<i>روی لینک بالا بزنید تا کپی شود، سپس آن را برای دوستان خود بفرستید.</i>"
+            "<i>لینک را برای دوستان خود بفرستید و همراهان تازه‌ای به ماجراجویی خود اضافه کنید.</i>"
         )
+
 
         # دکمه اشتراک‌گذاری
         share_text = quote("به دنیای رازآلود این بازی نقش‌آفرینی بپیوندید! ⚔️")

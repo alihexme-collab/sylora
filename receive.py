@@ -252,26 +252,72 @@ class Receive:
         else:
             await update.message.reply_text("نظر شما از قبل ثبت شده است")
 
-    async def show_comments(self, update:Update, context:ContextTypes.DEFAULT_TYPE):
+
+    async def show_comments(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
         await query.answer()
-        chat_id = query.message.chat.id
+        ADMIN_IDS = {7606015504}  # آیدی ادمین‌ها
+        user_id = query.from_user.id
+        if user_id not in ADMIN_IDS:
+            await query.answer("دسترسی غیرمجاز", show_alert=True)
+            return
 
-        with open("comment.json", "r", encoding="utf-8") as file:
-            content = file.read().strip()
-            comments = json.loads(content) if content else {}
-        texts =[]
-        text = ""
-        for id, data in comments.items():
-            text += f"\nid: {id}\ndate: {data['date']}\n{data['text']}"
-            if len(text) > 2000:
-                texts.append(text)
-                text=""
-        texts.append(text)
-        for text in texts:
-            await query.message.reply_text(text)
-        with open("comment.json", "w", encoding="utf-8") as file:
-            json.dump({}, file, ensure_ascii=False, indent=4)
+        path = Path("comment.json")
+
+        if not path.exists():
+            await query.message.reply_text("هیچ نظری ثبت نشده است.")
+            return
+
+        try:
+            with open(path, "r", encoding="utf-8") as file:
+                content = file.read().strip()
+                comments = json.loads(content) if content else {}
+        except (json.JSONDecodeError, OSError):
+            await query.message.reply_text("فایل نظرات خراب است یا قابل خواندن نیست.")
+            return
+
+        if not comments:
+            await query.message.reply_text("هیچ نظری ثبت نشده است.")
+            return
+
+        messages = []
+        current_chunk = ""
+
+        for chat_id, data in comments.items():
+            block = (
+                f"👤 `ID`: `{chat_id}`\n"
+                f"📅 `Date`: {data.get('date', 'نامشخص')}\n"
+                f"💬 `Text`:\n{data.get('text', '')}\n"
+                f"{'—' * 20}\n"
+            )
+
+            if len(current_chunk) + len(block) > 3500:
+                if current_chunk.strip():
+                    messages.append(current_chunk)
+                current_chunk = block
+            else:
+                current_chunk += block
+
+        if current_chunk.strip():
+            messages.append(current_chunk)
+
+        try:
+            for chunk in messages:
+                await query.message.reply_text(chunk, parse_mode="Markdown")
+        except Exception as exc:
+            print(f"show_comments send error: {exc}")
+            await query.message.reply_text("در ارسال نظرات خطا رخ داد؛ فایل پاک نشد.")
+            return
+
+        try:
+            with open(path, "w", encoding="utf-8") as file:
+                json.dump({}, file, ensure_ascii=False, indent=4)
+        except OSError as exc:
+            print(f"show_comments clear error: {exc}")
+            await query.message.reply_text("نظرات ارسال شدند ولی پاک‌سازی فایل انجام نشد.")
+            return
+
+        await query.message.reply_text("همه نظرات نمایش داده شدند و فایل پاک شد.")
 
         
 

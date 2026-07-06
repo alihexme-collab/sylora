@@ -28,7 +28,7 @@ class Sender:
             return None
 
         # فرض می‌شود bot داخل self.bot نگهداری می‌شود
-        sent = await self.bot.send_message(
+        sent = await app.bot.send_message(
             chat_id=chat_id,
             text=text,
             reply_markup=reply_markup,

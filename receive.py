@@ -1,16 +1,14 @@
-from telegram import *
-from workers.loader import *
-from telegram.ext import *
-from workers import *
-from combat_cache import get_combat_session, delete_combat_session
-from workers.callback_store import callback_store
+import json
 from pathlib import Path
+from telegram import Update
+from telegram.ext import ContextTypes, CommandHandler, CallbackQueryHandler, MessageHandler, filters
+from workers.loader import app, bus
+from workers.callback_store import callback_store
+from combat_cache import get_combat_session, delete_combat_session
+
 class Receive:
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        print("===== RECIVED Start ============")
-
-
         chat_id = update.message.chat_id
 
         await bus.emit(
@@ -69,6 +67,7 @@ class Receive:
 
         data = callback_store.get(cid)
         if not data:
+            await query.answer("⌛ این گزینه منقضی شده است. لطفا دوباره تلاش کنید.", show_alert=True)
             return
 
         enemy_type = data["enemy_type"]
@@ -142,13 +141,13 @@ class Receive:
         chat_id = query.message.chat_id
 
         if not data or not data.startswith("cb|"):
-            await query.answer("داده‌ی نامعتبر.", show_alert=True)
+            await query.answer("⚠️ داده‌ی ارسالی نامعتبر است.", show_alert=True)
             return
 
         parts = data.split("|")
 
         if len(parts) != 3:
-            await query.answer("فرمت داده نامعتبر است.", show_alert=True)
+            await query.answer("⚠️ فرمت درخواست نامعتبر است.", show_alert=True)
             return
 
         _, session_id, char_opt_code = parts
@@ -156,17 +155,17 @@ class Receive:
         character_option = OPTION_CODE_MAP.get(char_opt_code)
 
         if character_option is None:
-            await query.answer("اکشن انتخاب‌شده معتبر نیست.", show_alert=True)
+            await query.answer("⚔️ تصمیم انتخاب‌شده معتبر نیست.", show_alert=True)
             return
 
         session = get_combat_session(session_id)
 
         if not session:
-            await query.answer("این اکشن منقضی شده است. دوباره تلاش کنید.", show_alert=True)
+            await query.answer("⌛ نوبت مبارزه منقضی شده است. لطفا دوباره اقدام کنید.", show_alert=True)
             return
 
         if session.get("owner_chat_id") is not None and session.get("owner_chat_id") != chat_id:
-            await query.answer("این دکمه متعلق به شما نیست.", show_alert=True)
+            await query.answer("🛡 این نبرد متعلق به شما نیست.", show_alert=True)
             return
 
         try:
@@ -195,7 +194,7 @@ class Receive:
         query = update.callback_query
         await query.answer()
         chat_id = query.message.chat.id
-        print(":"*100)
+
         await bus.emit(
             "COMMAND",
             text=f"/start {chat_id}",
@@ -205,8 +204,6 @@ class Receive:
             name=query.from_user.full_name,
             message=query.message
         )
-        print(":"*100)
-
 
     async def get_comment(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
@@ -231,7 +228,7 @@ class Receive:
                 message=query.message
             )
         else:
-            await query.message.reply_text("نظر شما از قبل ثبت شده است")
+            await query.message.reply_text("💬 نظر ارزشمند شما قبلاً ثبت شده است و نیازی به ارسال مجدد نیست.")
 
     async def comment(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id = update.message.chat_id
@@ -253,22 +250,21 @@ class Receive:
                 chat_id=chat_id
             )
         else:
-            await update.message.reply_text("نظر شما از قبل ثبت شده است")
-
+            await update.message.reply_text("💬 نظر ارزشمند شما قبلاً ثبت شده است.")
 
     async def show_comments(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
         await query.answer()
-        ADMIN_IDS = {7606015504}  # آیدی ادمین‌ها
+        ADMIN_IDS = {7606015504}
         user_id = query.from_user.id
         if user_id not in ADMIN_IDS:
-            await query.answer("دسترسی غیرمجاز", show_alert=True)
+            await query.answer("🚫 دسترسی به این بخش تنها برای مدیریت امکان‌پذیر است.", show_alert=True)
             return
 
         path = Path("comment.json")
 
         if not path.exists():
-            await query.message.reply_text("هیچ نظری ثبت نشده است.")
+            await query.message.reply_text("📂 در حال حاضر هیچ نظری ثبت نشده است.")
             return
 
         try:
@@ -276,21 +272,21 @@ class Receive:
                 content = file.read().strip()
                 comments = json.loads(content) if content else {}
         except (json.JSONDecodeError, OSError):
-            await query.message.reply_text("فایل نظرات خراب است یا قابل خواندن نیست.")
+            await query.message.reply_text("❌ فایل نظرات خوانا نیست یا آسیب دیده است.")
             return
 
         if not comments:
-            await query.message.reply_text("هیچ نظری ثبت نشده است.")
+            await query.message.reply_text("📂 لیست نظرات خالی است.")
             return
 
         messages = []
-        current_chunk = ""
+        current_chunk = "📥 <b>لیست نظرات ثبت شده کاربران:</b>\n\n"
 
         for chat_id, data in comments.items():
             block = (
-                f"👤 `ID`: `{chat_id}`\n"
-                f"📅 `Date`: {data.get('date', 'نامشخص')}\n"
-                f"💬 `Text`:\n{data.get('text', '')}\n"
+                f"👤 <b>کاربر:</b> <code>{chat_id}</code>\n"
+                f"📅 <b>تاریخ ثبت:</b> {data.get('date', 'نامشخص')}\n"
+                f"📝 <b>متن نظر:</b>\n{data.get('text', '')}\n"
                 f"{'—' * 20}\n"
             )
 
@@ -306,10 +302,10 @@ class Receive:
 
         try:
             for chunk in messages:
-                await query.message.reply_text(chunk, parse_mode="Markdown")
+                await query.message.reply_text(chunk, parse_mode="HTML")
         except Exception as exc:
             print(f"show_comments send error: {exc}")
-            await query.message.reply_text("در ارسال نظرات خطا رخ داد؛ فایل پاک نشد.")
+            await query.message.reply_text("❌ خطایی در ارسال گزارش نظرات رخ داد. داده‌ها پاک نشدند.")
             return
 
         try:
@@ -317,105 +313,24 @@ class Receive:
                 json.dump({}, file, ensure_ascii=False, indent=4)
         except OSError as exc:
             print(f"show_comments clear error: {exc}")
-            await query.message.reply_text("نظرات ارسال شدند ولی پاک‌سازی فایل انجام نشد.")
+            await query.message.reply_text("✅ نظرات ارسال شدند، اما خالی کردن موقت فایل با خطا مواجه شد.")
             return
 
-        await query.message.reply_text("همه نظرات نمایش داده شدند و فایل پاک شد.")
-
-        
-
-        
+        await query.message.reply_text("🧹 همه نظرات با موفقیت بررسی و لیست بایگانی تخلیه شد.")
 
 
 receive = Receive()
 
-
-app.add_handler(
-    CommandHandler(
-        "start",
-        receive.start,
-    )
-)
-
-
-app.add_handler(
-    CallbackQueryHandler(
-        receive.fight,
-        pattern="^نبرد$"
-    )
-)
-
-app.add_handler(
-    CallbackQueryHandler(
-        receive.upgrade_request,
-        pattern="^ارتقا$"
-    )
-)
-
-app.add_handler(
-    CallbackQueryHandler(
-        receive.update,
-        pattern="^upgrade:"
-    )
-)
-
-app.add_handler(
-    CallbackQueryHandler(
-        receive.choose_enemy,
-        pattern="^fight:"
-    )
-)
-
-app.add_handler(
-    CallbackQueryHandler(
-        receive.move,
-        pattern="^حرکت$"
-    )
-)
-
-app.add_handler(
-    CallbackQueryHandler(
-        receive.sleep,
-        pattern="^استراحت$"
-    )
-)
-
-app.add_handler(
-    CallbackQueryHandler(
-        receive.move_to,
-        pattern="^move_to:"
-    )
-)
-
-app.add_handler(
-    CallbackQueryHandler(
-        receive.combat,
-        pattern=r"^cb\|"
-    )
-)
-
-app.add_handler(
-    CallbackQueryHandler(
-        receive.home,
-        pattern="^home$"
-    )
-)
-app.add_handler(
-    CallbackQueryHandler(
-        receive.get_comment,
-        pattern="^ثبت نظر$"
-    )
-)
-app.add_handler(
-    MessageHandler(
-        filters.TEXT & ~filters.COMMAND,
-        callback=receive.comment,
-    )
-)
-
-app.add_handler(
-    CallbackQueryHandler(
-        receive.show_comments,
-        pattern="^نمایش نظرات$"
-    )
-)
+app.add_handler(CommandHandler("start", receive.start))
+app.add_handler(CallbackQueryHandler(receive.fight, pattern="^نبرد$"))
+app.add_handler(CallbackQueryHandler(receive.upgrade_request, pattern="^ارتقا$"))
+app.add_handler(CallbackQueryHandler(receive.update, pattern="^upgrade:"))
+app.add_handler(CallbackQueryHandler(receive.choose_enemy, pattern="^fight:"))
+app.add_handler(CallbackQueryHandler(receive.move, pattern="^حرکت$"))
+app.add_handler(CallbackQueryHandler(receive.sleep, pattern="^استراحت$"))
+app.add_handler(CallbackQueryHandler(receive.move_to, pattern="^move_to:"))
+app.add_handler(CallbackQueryHandler(receive.combat, pattern=r"^cb\|"))
+app.add_handler(CallbackQueryHandler(receive.home, pattern="^home$"))
+app.add_handler(CallbackQueryHandler(receive.get_comment, pattern="^ثبت نظر$"))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, callback=receive.comment))
+app.add_handler(CallbackQueryHandler(receive.show_comments, pattern="^نمایش نظرات$"))

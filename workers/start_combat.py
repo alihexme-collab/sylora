@@ -55,12 +55,7 @@ class StartCombat:
             turn=turn,
             details=details,
         )
-
-    
-
-
-
-        
+ 
 
 start_combat = StartCombat()
 bus.listen("START_COMBAT", start_combat.get)

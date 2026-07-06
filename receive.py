@@ -83,7 +83,8 @@ class Receive:
             enemy_count=1,
             message=query.message,
             character_id=hero_id,
-            turn=0
+            turn=0,
+            details={}
         )
 
     async def move(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -184,6 +185,8 @@ class Receive:
             enemy_count=enemy_count,
             character_id=session["character_id"],
             character_option=character_option,
+            turn=session['turn'],
+            details=session['details']
         )
 
         delete_combat_session(session_id)

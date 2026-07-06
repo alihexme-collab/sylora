@@ -426,6 +426,7 @@ class Generator:
         enemy_option = data.get("enemy_option")
         emy = data.get("emy")
         turn = data.get("turn")
+        details = data.get("details")
         option_codes = {
             "Hard Fight": "hf",
             "Normal Fight": "nf",
@@ -505,7 +506,8 @@ class Generator:
             "character_id": character_id,
             "player_id": player_id,
             "owner_chat_id": player_id,
-            "turn":turn
+            "turn":turn,
+            "details":details
         }
 
         session_id = create_combat_session(session_payload)

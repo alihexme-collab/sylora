@@ -16,6 +16,7 @@ class StartCombat:
         enemy_option=data.get("enemy_option"),
         character_option=data.get("character_option")
         turn = data.get("turn")
+        details = data.get("details")
         turn+=1
         async with get_db() as session:
             query=select(Character).where(Character.character_id == character_id)
@@ -51,7 +52,8 @@ class StartCombat:
             character_option=character_option,
             hero=hero,
             emy=emy,
-            turn=turn
+            turn=turn,
+            details=details,
         )
 
     

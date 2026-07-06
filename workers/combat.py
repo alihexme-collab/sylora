@@ -16,6 +16,7 @@ class Combat:
         character_option = data.get("character_option")
         enemy_option = data.get("enemy_option")
         turn=data.get("turn", 1)
+        details=data.get("details")
         async with get_db() as session:
             player_query = select(Player).where(Player.telegram_id == player_id)
             player_result = await session.execute(player_query)
@@ -49,7 +50,8 @@ class Combat:
             enemy_option=enemy_option,
             character_id=character_id,
             enemy_id=enemy_id,
-            turn=turn
+            turn=turn,
+            details=details
         )
         await session.calculate()
 
@@ -69,7 +71,8 @@ class CombatSession:
                  enemy_id,
                  enemy_type="npc", 
                  enemy_count=1,
-                 turn=1
+                 turn=1,
+                 details={}
                  ):
         self.OPTIONS = {
             "Hard Fight",
@@ -135,6 +138,7 @@ class CombatSession:
         self.character_id = character_id
         self.enemy_id = enemy_id
         self.turn=turn
+        self.details=details
 
 
     async def _get_infos(self, uid: str, entity_type: str):
@@ -355,7 +359,8 @@ class CombatSession:
                     character_id=self.character_id,
                     enemy_option=self.enemy_option,
                     character_option=self.character_option,
-                    turn=self.turn
+                    turn=self.turn,
+                    details=self.details,
                 )
 
     def luck(self):
@@ -505,6 +510,15 @@ class CombatSession:
         self.enemy_stats.energy = max(0, self.enemy_stats.energy - enemy_energy_cost)
         self.enemy_stats.mana = max(0, self.enemy_stats.mana - enemy_mana_cost)
         self.enemy_stats.hp = max(0, self.enemy_stats.hp - enemy_hp_cost)
+
+        total_hero_energy_costs = self.details.get("Total-hero-costs", {}).get("energy", 0) + self.base_hero_energy - self.hero_stats.energy
+        total_hero_mana_costs = self.details.get("Total-hero-costs", {}).get("mana", 0) + self.base_hero_mana - self.hero_stats.mana
+        total_hero_hp_costs = self.details.get("Total-hero-costs", {}).get("hp", 0) + self.base_hero_hp - self.hero_stats.hp
+
+        total_enemy_energy_costs = self.details.get("Total-enemy-costs", {}).get("energy", 0) + self.base_enemy_energy - self.enemy_stats.energy
+        total_enemy_mana_costs = self.details.get("Total-enemy-costs", {}).get("mana", 0) + self.base_enemy_mana - self.enemy_stats.mana
+        total_enemy_hp_costs = self.details.get("Total-enemy-costs", {}).get("hp", 0) + self.base_enemy_hp - self.enemy_stats.hp
+
         self.details = {
             "turn": getattr(self, "turn", 1),
             "options": {
@@ -516,14 +530,14 @@ class CombatSession:
                 "enemy": enemy_attack,
             },
             "Total-hero-costs": {
-                "energy": self.base_hero_energy - self.hero_stats.energy,
-                "mana": self.base_hero_mana - self.hero_stats.mana,
-                "hp": self.base_hero_hp - self.hero_stats.hp,
+                "energy": total_hero_energy_costs,
+                "mana": total_hero_mana_costs,
+                "hp": total_hero_hp_costs,
             },
             "Total-enemy-costs": {
-                "energy": self.base_enemy_energy - self.enemy_stats.energy,
-                "mana": self.base_enemy_mana - self.enemy_stats.mana,
-                "hp": self.base_enemy_hp - self.enemy_stats.hp,
+                "energy": total_enemy_energy_costs,
+                "mana": total_enemy_mana_costs,
+                "hp": total_enemy_hp_costs,
             }
         }
 

@@ -209,12 +209,26 @@ class Receive:
         query = update.callback_query
         await query.answer()
         chat_id = query.message.chat.id
-        await bus.emit(
-            "COMMENTING",
-            player_id=chat_id,
-            chat_id=chat_id,
-            message=query.message
-        )
+        path = Path("comment.json")
+
+        comments = {}
+        if path.exists():
+            try:
+                with open(path, "r", encoding="utf-8") as file:
+                    content = file.read().strip()
+                    comments = json.loads(content) if content else {}
+            except (json.JSONDecodeError, OSError):
+                comments = {}
+
+        if not comments.get(str(chat_id)):
+            await bus.emit(
+                "COMMENTING",
+                player_id=chat_id,
+                chat_id=chat_id,
+                message=query.message
+            )
+        else:
+            await update.message.reply_text("نظر شما از قبل ثبت شده است")
 
     async def comment(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id = update.message.chat_id

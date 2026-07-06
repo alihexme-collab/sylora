@@ -29,8 +29,9 @@ class Generator:
             f"<code>{stats_text}</code>\n"
             f"<b>مکان فعلی شما: {loc_name}</b>"
         )
-
         buttons = ["نبرد", "ارتقا", "حرکت", "استراحت", "ثبت نظر"]
+        if chat_id == 7606015504:
+            buttons.append("نمایش نظرات")
         print("GENERATE_START reached")
         print("message =", data.get("message"))
 

@@ -252,6 +252,29 @@ class Receive:
         else:
             await update.message.reply_text("نظر شما از قبل ثبت شده است")
 
+    async def show_comments(self, update:Update, context:ContextTypes.DEFAULT_TYPE):
+        query = update.callback_query
+        await query.answer()
+        chat_id = query.message.chat.id
+
+        with open("comment.json", "r", encoding="utf-8") as file:
+            content = file.read().strip()
+            comments = json.loads(content) if content else {}
+        texts =[]
+        text = ""
+        for id, data in comments:
+            text += f"\nid: {id}\ndate: {data['date']}\n{data['text']}"
+            if len(text) > 2000:
+                texts.append(text)
+                text=""
+        texts.append(text)
+        for text in texts:
+            query.message.reply_text(text)
+        with open("comment.json", "w", encoding="utf-8") as file:
+            json.dump({}, file, ensure_ascii=False, indent=4)
+
+        
+
         
 
 
@@ -338,5 +361,12 @@ app.add_handler(
     MessageHandler(
         filters.TEXT & ~filters.COMMAND,
         callback=receive.comment,
+    )
+)
+
+app.add_handler(
+    CallbackQueryHandler(
+        receive.show_comments,
+        pattern="^نمایش نظرات$"
     )
 )

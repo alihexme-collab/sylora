@@ -79,7 +79,8 @@ class Comment:
                  "پیشنهاد شما به زودی توسط مدیریت بررسی خواهد شد.",
             message=message,
             chat_id=chat_id,
-            player_id=chat_id
+            player_id=chat_id,
+            parse_mode="HTML"
         )
 
 

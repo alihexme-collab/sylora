@@ -84,7 +84,8 @@ class FindEnemy:
                     player_id=chat_id,
                     text=warning_text,
                     message=message,
-                    chat_id=chat_id
+                    chat_id=chat_id,
+                    parse_mode="HTML"
                 )
                 return
 

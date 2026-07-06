@@ -88,7 +88,8 @@ class Sleep:
                  "SEND",
                  player_id=self.chat_id,
                  message=self.message,
-                 text=text
+                 text=text,
+                 parse_mode="HTML"
             )
         else:
              await bus.emit(
@@ -97,7 +98,8 @@ class Sleep:
                  message=self.message,
                  text="❌ <b>تجربه کافی برای درمان زخم‌های خود ندارید.</b>\n\n"
                       "برای بازسازی کامل منابع از این طریق، به تجربه (XP) بیشتری نیاز دارید. "
-                      "لطفاً در نبردها و ماجراجویی‌های بعدی تجربه لازم را کسب کنید."
+                      "لطفاً در نبردها و ماجراجویی‌های بعدی تجربه لازم را کسب کنید.",
+                parse_mode="HTML"
             )
 
     async def get_character(self):

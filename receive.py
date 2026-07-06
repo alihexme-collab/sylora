@@ -262,7 +262,7 @@ class Receive:
             comments = json.loads(content) if content else {}
         texts =[]
         text = ""
-        for id, data in comments:
+        for id, data in comments.items():
             text += f"\nid: {id}\ndate: {data['date']}\n{data['text']}"
             if len(text) > 2000:
                 texts.append(text)

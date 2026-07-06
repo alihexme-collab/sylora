@@ -36,7 +36,7 @@ class Sleep:
 
             results = await session.execute(query)
 
-            for stats in results.all():
+            for stats in results.scalars().all():
                 # HP
                 stats.hp = min(stats.hp + 10, stats.base_hp)
 

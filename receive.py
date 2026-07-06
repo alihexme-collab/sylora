@@ -319,7 +319,51 @@ class Receive:
         await query.message.reply_text("🧹 همه نظرات با موفقیت بررسی و لیست بایگانی تخلیه شد.")
 
 
+    async def reffral(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        BOT_USERNAME = "playleisbot" 
+        query = update.callback_query
+        await query.answer()
+        user_id = query.from_user.id
+
+        # ۱. تولید لینک دعوت اختصاصی
+        ref_link = f"https://t.me/{BOT_USERNAME}?start=ref_{user_id}"
+
+        # ۲. طراحی متن پیام به صورت داستانی و جذاب
+        text = (
+            "⚔️ <b>اتحاد ماجراجویان | سیستم دعوت</b>\n\n"
+            "ماجراجوی گرامی! با دعوت هم‌رزمان خود به این دنیای پرمخاطره، ارتش خود را قوی‌تر کنید.\n\n"
+            "🎁 <b>پاداش دعوت:</b>\n"
+            "به ازای هر بازیکن جدیدی که با لینک شما وارد بازی شود و سفر خود را آغاز کند، "
+            "مقدار <b>۵۰ امتیاز تجربه (XP)</b> به عنوان پاداش برای ارتقای ویژگی‌ها (قدرت، سرعت و...) دریافت خواهید کرد.\n\n"
+            "🔗 <b>لینک دعوت اختصاصی شما:</b>\n"
+            f"<code>{ref_link}</code>\n\n"
+            "<i>کافی‌ست روی لینک بالا کلیک کنید تا کپی شود، سپس آن را برای دوستان خود بفرستید.</i>"
+        )
+
+        # ارسال پیام با دکمه اشتراک‌گذاری سریع (اختیاری)
+        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    "📢 اشتراک‌گذاری با دوستان", 
+                    url=f"https://t.me/share/url?url={ref_link}&text=به%20دنیای%20رازآلود%20این%20بازی%20نقش‌آفرینی%20بپیوندید!⚔️"
+                )
+            ]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await query.message.reply_text(
+            text=text,
+            parse_mode="HTML",
+            reply_markup=reply_markup
+        )
+
+
+
+
+
 receive = Receive()
+
 
 app.add_handler(CommandHandler("start", receive.start))
 app.add_handler(CallbackQueryHandler(receive.fight, pattern="^نبرد$"))
@@ -334,3 +378,4 @@ app.add_handler(CallbackQueryHandler(receive.home, pattern="^home$"))
 app.add_handler(CallbackQueryHandler(receive.get_comment, pattern="^ثبت نظر$"))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, callback=receive.comment))
 app.add_handler(CallbackQueryHandler(receive.show_comments, pattern="^نمایش نظرات$"))
+app.add_handler(CallbackQueryHandler(receive.reffral, pattern="^معرفی به دوستان$"))

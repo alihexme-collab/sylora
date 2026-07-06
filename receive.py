@@ -228,7 +228,7 @@ class Receive:
                 message=query.message
             )
         else:
-            await update.message.reply_text("نظر شما از قبل ثبت شده است")
+            await query.message.reply_text("نظر شما از قبل ثبت شده است")
 
     async def comment(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id = update.message.chat_id

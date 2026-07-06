@@ -230,6 +230,8 @@ class Receive:
                     message=update.message,
                     chat_id=chat_id
                 )
+            else:
+                update.message.reply_text("نظر شما از قبل ثبت شده است")
         
 
 

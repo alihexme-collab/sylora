@@ -316,6 +316,7 @@ app.add_handler(
 )
 app.add_handler(
     MessageHandler(
+        filters.TEXT,
         callback=receive.get_comment,
     )
 )

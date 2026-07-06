@@ -32,7 +32,7 @@ class Tick:
 
     async def tick(self):
         while True:
-            await asyncio.sleep(300)
+            await asyncio.sleep(120)
 
             self.datetime += timedelta(minutes=2.5)
 

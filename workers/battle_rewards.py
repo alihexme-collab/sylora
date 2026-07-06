@@ -35,17 +35,17 @@ class BattleRewards:
                 args.update(
                     {
                         "level": level,
-                        "strength": self.hero_stats.strength + 2 * level,
-                        "speed": self.hero_stats.speed + 2 * level,
-                        "defense": self.hero_stats.defense + 2* level,
-                        "hp": self.hero_stats.base_hp + 10* level,
-                        "energy": self.hero_stats.base_energy + 10* level,
-                        "mana": self.hero_stats.base_mana + 10* level,
+                        "strength": self.hero_stats.strength + 1.5 * level,
+                        "speed": self.hero_stats.speed + 1.5 * level,
+                        "defense": self.hero_stats.defense + 1.5 * level,
+                        "hp": self.hero_stats.base_hp + 5 * level,
+                        "energy": self.hero_stats.base_energy + 5 * level,
+                        "mana": self.hero_stats.base_mana + 5 * level,
                         "intelligence": self.hero_stats.intelligence + 1* level,
                         "luck": self.hero_stats.luck +1* level,
-                        "base_hp": self.hero_stats.base_hp + 10* level,
-                        "base_energy": self.hero_stats.base_energy + 10* level,
-                        "base_mana": self.hero_stats.base_mana + 10* level,
+                        "base_hp": self.hero_stats.base_hp + 5 * level,
+                        "base_energy": self.hero_stats.base_energy + 5 * level,
+                        "base_mana": self.hero_stats.base_mana + 5 * level,
                         "exp": 0,
                     }
                 )

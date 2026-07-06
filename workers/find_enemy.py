@@ -138,7 +138,8 @@ class FindEnemy:
                     player_id=chat_id,
                     text="👀 <b>سکوت سنگینی منطقه را فرا گرفته است...</b>\n\nهیچ موجود یا حریفی در این اطراف یافت نشد.",
                     message=message,
-                    chat_id=chat_id
+                    chat_id=chat_id,
+                    parse_mode="HTML"
                 )
                 return
 
@@ -225,7 +226,8 @@ class FindEnemy:
                 chat_id=chat_id,
                 text=text,
                 buttons=buttons,
-                message=message
+                message=message,
+                parse_mode="HTML"
             )
 
 find_enemy = FindEnemy()

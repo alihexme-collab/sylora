@@ -269,7 +269,7 @@ class Receive:
                 text=""
         texts.append(text)
         for text in texts:
-            query.message.reply_text(text)
+            await query.message.reply_text(text)
         with open("comment.json", "w", encoding="utf-8") as file:
             json.dump({}, file, ensure_ascii=False, indent=4)
 

@@ -1,6 +1,6 @@
 # loader.py
 import asyncio
-
+from workers.bus import bus
 from telegram.ext import ApplicationBuilder
 from config import BOT_TOKEN, BOT_BASE_URL
 from workers.tick import tick

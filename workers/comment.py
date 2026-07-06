@@ -1,10 +1,8 @@
 from .bus import bus
 from database.db_manager import get_db
 from database.model import *
-from sqlalchemy import select, func
+from sqlalchemy import select
 from datetime import datetime
-import random as rnd
-import uuid
 from pathlib import Path
 import json
 
@@ -16,7 +14,9 @@ class Comment:
         async with get_db() as session:
             result = await session.execute(select(Player).where(Player.telegram_id == chat_id))
             plr: Player = result.scalar_one_or_none()
-            plr.current_work = "commenting"
+            if plr:
+                plr.current_work = "commenting"
+                await session.commit()  # اضافه کردن commit برای ذخیره تغییرات وضعیت بازیکن
 
         await bus.emit(
             "SEND",
@@ -33,25 +33,31 @@ class Comment:
         async with get_db() as session:
             result = await session.execute(select(Player).where(Player.telegram_id == chat_id))
             plr: Player = result.scalar_one_or_none()
-            plr.current_work = ""
+            if plr:
+                plr.current_work = ""
+                await session.commit()  # اضافه کردن commit برای ذخیره تغییرات وضعیت بازیکن
 
-        path = Path(
-            "comment.json"
-        )
+        path = Path("comment.json")
+        comments = {}
+
+        # ۱. خواندن کامنت‌های قبلی در صورت وجود فایل
         if path.exists():
-            with open("comment.json", "r") as file:
-                comments = json.load(file)
+            try:
+                with open("comment.json", "r", encoding="utf-8") as file:
+                    content = file.read().strip()
+                    comments = json.loads(content) if content else {}
+            except (json.JSONDecodeError, OSError):
+                comments = {}
 
-        else:
-            comments = {
-                str(chat_id) : {
-                    "text": message.text,
-                    "date": datetime.now()
-                }
-            }
+        # ۲. اضافه کردن کامنت جدید به دیکشنری (با تبدیل datetime به رشته)
+        comments[str(chat_id)] = {
+            "text": message.text,
+            "date": datetime.now().isoformat()  # رفع خطای عدم امکان سریالایز کردن datetime
+        }
 
-        with open("comment.json", "w") as file:
-            json.dump(comments, file)
+        # ۳. ذخیره‌سازی مجدد کل دیکشنری
+        with open("comment.json", "w", encoding="utf-8") as file:
+            json.dump(comments, file, ensure_ascii=False, indent=4)
 
         await bus.emit(
             "SEND",
@@ -60,6 +66,7 @@ class Comment:
             chat_id=chat_id,
             player_id=chat_id
         )
+
 
 cment = Comment()
 bus.listen("COMMENTING", cment.commenting)

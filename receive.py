@@ -218,20 +218,26 @@ class Receive:
 
     async def comment(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id = update.message.chat_id
-        path = Path(
-            "comment.json"
-        )
+        path = Path("comment.json")
+
+        comments = {}
         if path.exists():
-            with open("comment.json", "r") as file:
-                comments = json.load(file)
-            if not comments.get(f"{chat_id}"):
-                await bus.emit(
-                    "COMMENT",
-                    message=update.message,
-                    chat_id=chat_id
-                )
-            else:
-                update.message.reply_text("نظر شما از قبل ثبت شده است")
+            try:
+                with open(path, "r", encoding="utf-8") as file:
+                    content = file.read().strip()
+                    comments = json.loads(content) if content else {}
+            except (json.JSONDecodeError, OSError):
+                comments = {}
+
+        if not comments.get(str(chat_id)):
+            await bus.emit(
+                "COMMENT",
+                message=update.message,
+                chat_id=chat_id
+            )
+        else:
+            await update.message.reply_text("نظر شما از قبل ثبت شده است")
+
         
 
 

@@ -39,6 +39,8 @@ class Generator:
         message = data.get("message")
         loc_name = data.get("loc") or "نامشخص"
 
+        channel_url = "https://t.me/leis_updates"
+
         char_name = escape(str(character.name))
         loc_name = escape(str(loc_name))
 
@@ -65,7 +67,8 @@ class Generator:
             f"⚜️ <b>بازگشت به مسیر ماجراجویی</b>\n\n"
             f"درود بر تو، <b>{char_name}</b>.\n"
             f"جهان هنوز آرام نگرفته و سرنوشتت در انتظار تصمیم بعدی توست.\n\n"
-            f"📍 <b>مکان فعلی:</b> {loc_name}\n\n"
+            f"📍 <b>مکان فعلی:</b> {loc_name}\n"
+            f"📢 <b>به‌روزرسانی‌های ربات:</b> <a href=\"{channel_url}\">کانال رسمی ما</a>\n\n"
             f"📜 <b>وضعیت فعلی شخصیت</b>\n"
             f"<code>{stats_text}</code>\n\n"
             f"اکنون چه تصمیمی می‌گیری؟"
@@ -85,6 +88,7 @@ class Generator:
             parse_mode="HTML",
             message=message
         )
+
 
     # -----------------------------
     # Combat Text Generators

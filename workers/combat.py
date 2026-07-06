@@ -265,8 +265,6 @@ class CombatSession:
             self.base_enemy_mana = self.enemy_stats.mana
             self.base_enemy_hp = self.enemy_stats.hp
 
-            self.turn = 1
-
             self.luck()
             self.set_powers()
             await self.costs()
@@ -322,6 +320,7 @@ class CombatSession:
                     enemy_stats=self.enemy_stats,
                     message=self.message,
                     chat_id=self.chat_id,
+                    turn=self.turn
                 )
             else:
                 loc = select(Location).where(Location.location_id == self.hero.character_path)

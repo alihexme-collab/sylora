@@ -21,7 +21,6 @@ class Sender:
                 text=text,
                 reply_markup=reply_markup,
                 parse_mode=parse_mode,
-                **kwargs
             )
 
         if chat_id is None:
@@ -33,7 +32,6 @@ class Sender:
             text=text,
             reply_markup=reply_markup,
             parse_mode=parse_mode,
-            **kwargs
         )
         return sent
 

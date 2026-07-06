@@ -32,9 +32,9 @@ class Tick:
 
     async def tick(self):
         while True:
-            await asyncio.sleep(60)
+            await asyncio.sleep(300)
 
-            self.datetime += timedelta(minutes=5)
+            self.datetime += timedelta(minutes=2.5)
 
             self.data = {
                 "ye": self.datetime.year,

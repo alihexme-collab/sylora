@@ -4,6 +4,7 @@ from telegram.ext import *
 from workers import *
 from combat_cache import get_combat_session, delete_combat_session
 from workers.callback_store import callback_store
+from pathlib import Path
 class Receive:
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -204,8 +205,32 @@ class Receive:
         print(":"*100)
 
 
+    async def get_comment(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        query = update.callback_query
+        await query.answer()
+        chat_id = query.message.chat.id
+        await bus.emit(
+            "COMMENTING",
+            player_id=chat_id,
+            chat_id=chat_id,
+            message=query.message
+        )
 
-    
+    async def comment(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        chat_id = update.message.chat_id
+        path = Path(
+            "comment.json"
+        )
+        if path.exists():
+            with open("comment.json", "r") as file:
+                comments = json.load(file)
+            if not comments.get(f"{chat_id}"):
+                await bus.emit(
+                    "COMMENT",
+                    message=update.message,
+                    chat_id=chat_id
+                )
+        
 
 
 receive = Receive()

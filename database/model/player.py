@@ -12,3 +12,4 @@ class Player(Base):
     last_active = Column(DateTime)
     role = Column(Text)
     is_banned = Column(Boolean)
+    current_work = Column(Text)

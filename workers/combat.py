@@ -356,6 +356,7 @@ class CombatSession:
                     character_id=self.character_id,
                     enemy_option=self.enemy_option,
                     character_option=self.character_option,
+                    turn=self.turn
                 )
 
     def luck(self):

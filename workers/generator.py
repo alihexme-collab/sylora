@@ -30,7 +30,7 @@ class Generator:
             f"<b>مکان فعلی شما: {loc_name}</b>"
         )
 
-        buttons = ["نبرد", "ارتقا", "حرکت", "استراحت"]
+        buttons = ["نبرد", "ارتقا", "حرکت", "استراحت", "ثبت نظر"]
         print("GENERATE_START reached")
         print("message =", data.get("message"))
 

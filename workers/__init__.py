@@ -13,3 +13,4 @@ from .sleep import *
 from .start_combat import *
 from .callback_store import *
 from .tick import *
+from .comment import *

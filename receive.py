@@ -5,6 +5,8 @@ from telegram.ext import ContextTypes, CommandHandler, CallbackQueryHandler, Mes
 from workers.loader import app, bus
 from workers.callback_store import callback_store
 from combat_cache import get_combat_session, delete_combat_session
+from urllib.parse import quote
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 class Receive:
 
@@ -320,33 +322,42 @@ class Receive:
 
 
     async def reffral(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        BOT_USERNAME = "playleisbot" 
+        BOT_USERNAME = "playleisbot"
         query = update.callback_query
         await query.answer()
         user_id = query.from_user.id
 
-        # ۱. تولید لینک دعوت اختصاصی
+        # لینک دعوت اختصاصی
         ref_link = f"https://t.me/{BOT_USERNAME}?start=ref_{user_id}"
 
-        # ۲. طراحی متن پیام به صورت داستانی و جذاب
+        # اگر این مقادیر را در کلاس تعریف نکرده‌ای، اینجا مستقیم بگذار
+        upgrade_points = getattr(self, "REFERRAL_UPGRADE_POINTS", 1)
+        stat_points = getattr(self, "REFERRAL_STAT_POINTS", 1)
+        referral_reward_points = getattr(self, "REFERRAL_REWARD_POINTS", 1)
+
+        # متن دعوت با پاداش امتیازی
         text = (
             "⚔️ <b>اتحاد ماجراجویان | سیستم دعوت</b>\n\n"
-            "ماجراجوی گرامی! با دعوت هم‌رزمان خود به این دنیای پرمخاطره، ارتش خود را قوی‌تر کنید.\n\n"
+            "ماجراجوی گرامی! با دعوت هم‌رزمان خود به این دنیای پرمخاطره، ارتش خود را نیرومندتر کنید.\n\n"
             "🎁 <b>پاداش دعوت:</b>\n"
-            "به ازای هر بازیکن جدیدی که با لینک شما وارد بازی شود و سفر خود را آغاز کند، "
-            "مقدار <b>۵۰ امتیاز تجربه (XP)</b> به عنوان پاداش برای ارتقای ویژگی‌ها (قدرت، سرعت و...) دریافت خواهید کرد.\n\n"
+            f"به ازای هر بازیکن جدیدی که با لینک شما وارد بازی شود و برای اولین‌بار سفر خود را آغاز کند،\n"
+            f"<b>+{upgrade_points} upgrade points</b>\n"
+            f"<b>+{stat_points} stat points</b>\n"
+            f"<b>+{referral_reward_points} referral reward points</b>\n"
+            "به عنوان پاداش دریافت خواهید کرد.\n\n"
             "🔗 <b>لینک دعوت اختصاصی شما:</b>\n"
             f"<code>{ref_link}</code>\n\n"
-            "<i>کافی‌ست روی لینک بالا کلیک کنید تا کپی شود، سپس آن را برای دوستان خود بفرستید.</i>"
+            "<i>روی لینک بالا بزنید تا کپی شود، سپس آن را برای دوستان خود بفرستید.</i>"
         )
 
-        # ارسال پیام با دکمه اشتراک‌گذاری سریع (اختیاری)
-        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+        # دکمه اشتراک‌گذاری
+        share_text = quote("به دنیای رازآلود این بازی نقش‌آفرینی بپیوندید! ⚔️")
+        share_url = quote(ref_link, safe="")
         keyboard = [
             [
                 InlineKeyboardButton(
-                    "📢 اشتراک‌گذاری با دوستان", 
-                    url=f"https://t.me/share/url?url={ref_link}&text=به%20دنیای%20رازآلود%20این%20بازی%20نقش‌آفرینی%20بپیوندید!⚔️"
+                    "📢 اشتراک‌گذاری با دوستان",
+                    url=f"https://t.me/share/url?url={share_url}&text={share_text}"
                 )
             ]
         ]
@@ -357,6 +368,7 @@ class Receive:
             parse_mode="HTML",
             reply_markup=reply_markup
         )
+
 
 
 

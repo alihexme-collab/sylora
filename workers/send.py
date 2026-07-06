@@ -4,20 +4,39 @@ from .loader import *
 
 class Sender:
 
-    async def send(self, *, message: Message=None, text:str="", buttons=None, parse_mode=None, **kwargs):
-
-        if not message:
-            return None
-
+    async def send(
+        self,
+        *,
+        message: Message = None,
+        chat_id: int | str = None,
+        text: str = "",
+        buttons=None,
+        parse_mode=None,
+        **kwargs
+    ):
         reply_markup = self._build_keyboard(buttons)
 
-        sent = await message.reply_text(
+        if message:
+            return await message.reply_text(
+                text=text,
+                reply_markup=reply_markup,
+                parse_mode=parse_mode,
+                **kwargs
+            )
+
+        if chat_id is None:
+            return None
+
+        # فرض می‌شود bot داخل self.bot نگهداری می‌شود
+        sent = await self.bot.send_message(
+            chat_id=chat_id,
             text=text,
             reply_markup=reply_markup,
-            parse_mode=parse_mode
+            parse_mode=parse_mode,
+            **kwargs
         )
-
         return sent
+
 
 
     async def edit(

@@ -76,7 +76,7 @@ class BattleRewards:
     def is_hero_winner(self):
         return self.winner == "hero"
     
-    def calculate_combat_xp(self, base_xp: int = 25) -> int:
+    def calculate_combat_xp(self, base_xp: int = 15) -> int:
         print("+"*100)
         result = self.result_multiplier()
         print(result)
@@ -87,7 +87,13 @@ class BattleRewards:
         duration = self.duration_multiplier()
         print(duration)
 
-        xp = int(base_xp * result * effort * performance * duration)
+        xp = int(
+            base_xp * 
+            result * 
+            effort * 
+            performance * 
+            duration
+        )
         print(xp)
         print("+"*100)
         if self.is_hero_winner():

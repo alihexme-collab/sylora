@@ -310,6 +310,7 @@ class CombatSession:
                     emy=self.enemy.name,
                     enemy_count=self.enemy_count,
                 )
+                
 
                 await bus.emit(
                     "COMBAT_FINISHED",
@@ -511,13 +512,49 @@ class CombatSession:
         self.enemy_stats.mana = max(0, self.enemy_stats.mana - enemy_mana_cost)
         self.enemy_stats.hp = max(0, self.enemy_stats.hp - enemy_hp_cost)
 
-        total_hero_energy_costs = self.details.get("Total-hero-costs", {}).get("energy", 0) + self.base_hero_energy - self.hero_stats.energy
-        total_hero_mana_costs = self.details.get("Total-hero-costs", {}).get("mana", 0) + self.base_hero_mana - self.hero_stats.mana
-        total_hero_hp_costs = self.details.get("Total-hero-costs", {}).get("hp", 0) + self.base_hero_hp - self.hero_stats.hp
+        self.total_hero_energy_costs = (
+            self.details
+            .get("Total-hero-costs", {})
+            .get("energy", 0) + 
+            self.base_hero_energy - 
+            self.hero_stats.energy
+        )
+        self.total_hero_mana_costs = (
+            self.details
+            .get("Total-hero-costs", {})
+            .get("mana", 0) + 
+            self.base_hero_mana - 
+            self.hero_stats.mana
+        )
+        self.total_hero_hp_costs = (
+            self.details
+            .get("Total-hero-costs", {})
+            .get("hp", 0) + 
+            self.base_hero_hp - 
+            self.hero_stats.hp
+        )
 
-        total_enemy_energy_costs = self.details.get("Total-enemy-costs", {}).get("energy", 0) + self.base_enemy_energy - self.enemy_stats.energy
-        total_enemy_mana_costs = self.details.get("Total-enemy-costs", {}).get("mana", 0) + self.base_enemy_mana - self.enemy_stats.mana
-        total_enemy_hp_costs = self.details.get("Total-enemy-costs", {}).get("hp", 0) + self.base_enemy_hp - self.enemy_stats.hp
+        self.total_enemy_energy_costs = (
+            self.details
+            .get("Total-enemy-costs", {})
+            .get("energy", 0) + 
+            self.base_enemy_energy - 
+            self.enemy_stats.energy
+        )
+        self.total_enemy_mana_costs = (
+            self.details
+            .get("Total-enemy-costs", {})
+            .get("mana", 0) + 
+            self.base_enemy_mana - 
+            self.enemy_stats.mana
+        )
+        self.total_enemy_hp_costs = (
+            self.details
+            .get("Total-enemy-costs", {})
+            .get("hp", 0) + 
+            self.base_enemy_hp - 
+            self.enemy_stats.hp
+        )
 
         self.details = {
             "turn": getattr(self, "turn", 1),
@@ -530,14 +567,14 @@ class CombatSession:
                 "enemy": enemy_attack,
             },
             "Total-hero-costs": {
-                "energy": total_hero_energy_costs,
-                "mana": total_hero_mana_costs,
-                "hp": total_hero_hp_costs,
+                "energy": self.total_hero_energy_costs,
+                "mana": self.total_hero_mana_costs,
+                "hp": self.total_hero_hp_costs,
             },
             "Total-enemy-costs": {
-                "energy": total_enemy_energy_costs,
-                "mana": total_enemy_mana_costs,
-                "hp": total_enemy_hp_costs,
+                "energy": self.total_enemy_energy_costs,
+                "mana": self.total_enemy_mana_costs,
+                "hp": self.total_enemy_hp_costs,
             }
         }
 

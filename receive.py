@@ -308,3 +308,14 @@ app.add_handler(
         pattern="^home$"
     )
 )
+app.add_handler(
+    CallbackQueryHandler(
+        receive.get_comment,
+        pattern="^ثبت نظر$"
+    )
+)
+app.add_handler(
+    MessageHandler(
+        callback=receive.get_comment,
+    )
+)

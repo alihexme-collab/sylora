@@ -1,5 +1,6 @@
 from .bus import *
 from database.model import *
+from database.db_manager import *
 from sqlalchemy import update
 import random as rnd
 
@@ -176,4 +177,3 @@ class BattleRewards:
 
 battle_reward = BattleRewards()
 bus.listen("COMBAT_FINISHED", battle_reward.get)
-

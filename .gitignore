@@ -48,3 +48,4 @@ build/
 *.pem
 *.key
 set_enemy_powers.py
+updates.md

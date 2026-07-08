@@ -3,7 +3,7 @@ from database.model import *
 from database.db_manager import *
 from sqlalchemy import update
 import random as rnd
-
+from .level_manger import LevelManager
 class BattleRewards:
     async def get(self, **data):
         print(data)
@@ -30,25 +30,13 @@ class BattleRewards:
                 "exp": self.hero_stats.exp + gained_xp,
             }
             level_up =False
-            if self.hero_stats.exp + gained_xp > self.get_required_total_for_level(self.hero_stats.level):
-                level = self.hero_stats.level + 1
-                args.update(
-                    {
-                        "level": level,
-                        "strength": self.hero_stats.strength + 1.5 * level,
-                        "speed": self.hero_stats.speed + 1.5 * level,
-                        "defense": self.hero_stats.defense + 1.5 * level,
-                        "hp": self.hero_stats.base_hp + 5 * level,
-                        "energy": self.hero_stats.base_energy + 5 * level,
-                        "mana": self.hero_stats.base_mana + 5 * level,
-                        "intelligence": self.hero_stats.intelligence + 1* level,
-                        "luck": self.hero_stats.luck +1* level,
-                        "base_hp": self.hero_stats.base_hp + 5 * level,
-                        "base_energy": self.hero_stats.base_energy + 5 * level,
-                        "base_mana": self.hero_stats.base_mana + 5 * level,
-                        "exp": 0,
-                    }
+            total_exp = self.hero_stats.exp + gained_xp
+            requre_level = self.get_required_total_for_level(self.hero_stats.level)
+            if total_exp >= requre_level:
+                args = LevelManager.manage(
+                    self.hero_stats
                 )
+
                 gained_xp = 0
                 level_up = True
             query = update(

@@ -330,15 +330,16 @@ class Generator:
                 f"🌟 <b>ارتقای سطح!</b>\n"
                 f"تو اکنون به سطح <b>{args.get('level')}</b> رسیده‌ای.\n\n"
                 f"📈 آمار اصلی تو ارتقا یافت:\n"
-                f"💪 قدرت: {stats.strength} → {args.get('strength')}\n"
-                f"🏃 سرعت: {stats.speed} → {args.get('speed')}\n"
-                f"🛡 استقامت: {stats.defense} → {args.get('defense')}\n"
-                f"🧠 هوش: {stats.intelligence} → {args.get('intelligence')}\n"
-                f"🍀 شانس: {stats.luck} → {args.get('luck')}\n\n"
-                f"❤️ جان: {int(stats.hp)} → {args.get('hp')}\n"
-                f"⚡ انرژی: {int(stats.energy)} → {args.get('energy')}\n"
-                f"🔮 مانا: {int(stats.mana)} → {args.get('mana')}"
+                f"💪 قدرت: {int(stats.strength)} → {int(args.get('strength'))}\n"
+                f"🏃 سرعت: {int(stats.speed)} → {int(args.get('speed'))}\n"
+                f"🛡 استقامت: {int(stats.defense)} → {int(args.get('defense'))}\n"
+                f"🧠 هوش: {int(stats.intelligence)} → {int(args.get('intelligence'))}\n"
+                f"🍀 شانس: {int(stats.luck)} → {int(args.get('luck'))}\n\n"
+                f"❤️ جان: {int(stats.hp)} → {int(args.get('hp'))}\n"
+                f"⚡ انرژی: {int(stats.energy)} → {int(args.get('energy'))}\n"
+                f"🔮 مانا: {int(stats.mana)} → {int(args.get('mana'))}"
             )
+
 
             if xp > 0:
                 text += f"\n\n✨ تجربه به‌دست‌آمده از نبرد: <b>{xp}</b>"

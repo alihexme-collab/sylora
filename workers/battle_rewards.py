@@ -1,96 +1,156 @@
 from .bus import bus
 from database.db_manager import get_db
 from database.model import CharacterStats
-from sqlalchemy import update
+from sqlalchemy import select, update
+
 from game_formulas import LevelManager, ExpReward
 from constants import STAT_GROWTH_WEIGHTS
 
+
 class CombatRewardsProcessor:
-    def __init__(self):
-        self.hero_stats = None
-        self.chat_id = None
-        self.hero_id = None
-
     async def handle_combat_end(self, **data):
-        """نقطه ورود از طریق Event Bus"""
-        self.hero_stats = data.get("hero_stats")
-        self.chat_id = data.get("chat_id")
-        self.hero_id = self.hero_stats.character_id
-        
-        # ذخیره کردن دیتا برای استفاده در ایونت نهایی
-        self.raw_data = data 
-        
-        await self._process_rewards()
+        hero_stats = data.get("hero_stats")
+        chat_id = data.get("chat_id")
+        message = data.get("message")
+        enemy = data.get("enemy")
+        winner = data.get("winner")
+        player_id = data.get("player_id")
+        enemy_type = data.get("enemy_type")
+        enemy_count = max(1, int(data.get("enemy_count", 1) or 1))
 
-    async def _process_rewards(self):
-        """مدیریت چرخه اهدای جوایز"""
-        gained_xp = self._calculate_gained_xp()
-        total_xp = self.hero_stats.exp + gained_xp
-        
-        # بررسی وضعیت لول‌آپ
-        level_manager = LevelManager(self.hero_stats.level)
-        required_xp = level_manager.get_required_total_for_level()
-        
-        is_level_up = total_xp >= required_xp
-        
-        if is_level_up:
-            update_data = self._build_level_up_stats(level_manager, total_xp, required_xp)
-        else:
-            update_data = {"exp": total_xp}
+        if not hero_stats:
+            return
 
-        await self._update_hero_in_db(update_data)
-        await self._emit_reward_event(gained_xp, is_level_up, update_data)
+        hero_id = hero_stats.character_id
+        you_win = winner == "hero"
 
-    def _calculate_gained_xp(self) -> int:
-        """محاسبه تجربه کسب شده از این نبرد"""
-        # عدد 12 می‌تواند از سختی دشمن (self.raw_data.get("enemy_type")) بیاید
-        return ExpReward(12).calc_exp_reward()
+        if not you_win:
+            await self._emit_reward_event(
+                chat_id=chat_id,
+                message=message,
+                enemy=enemy,
+                hero_stats=hero_stats,
+                gained_xp=0,
+                level_up=False,
+                final_stats={},
+                you_win=False,
+                player_id=player_id,
+            )
+            return
 
-    def _build_level_up_stats(self, level_manager, total_xp, required_xp) -> dict:
-        """ساخت دیکشنری ویژگی‌های جدید هنگام ارتقای سطح"""
-        new_level = self.hero_stats.level + 1
-        stats_update = {}
+        gained_xp = self._calculate_gained_xp(
+            enemy_type=enemy_type,
+            enemy_count=enemy_count,
+        )
 
-        # ۱. ارتقای ویژگی‌های پایه بر اساس وزن‌های تعریف شده در constants
-        for stat, weight in STAT_GROWTH_WEIGHTS.items():
-            current_val = getattr(self.hero_stats, stat)
-            stats_update[stat] = level_manager.get_upgrade_value(current_val, weight)
+        final_update_data, level_up = self._build_final_stats(
+            hero_stats=hero_stats,
+            gained_xp=gained_xp,
+        )
 
-        # ۲. همگام‌سازی منابع جاری با مقادیر پایه جدید و کسر تجربه مصرف شده
-        stats_update.update({
-            "level": new_level,
-            "hp": stats_update["base_hp"],
-            "energy": stats_update["base_energy"],
-            "mana": stats_update["base_mana"],
-            "exp": total_xp - required_xp
-        })
-        return stats_update
+        updated_stats = await self._update_hero_in_db(
+            hero_id=hero_id,
+            update_data=final_update_data,
+        )
 
-    async def _update_hero_in_db(self, update_data: dict):
-        """اعمال تغییرات در دیتابیس"""
+        await self._emit_reward_event(
+            chat_id=chat_id,
+            message=message,
+            enemy=enemy,
+            hero_stats=updated_stats or hero_stats,
+            gained_xp=gained_xp,
+            level_up=level_up,
+            final_stats=final_update_data,
+            you_win=True,
+            player_id=player_id,
+        )
+
+    def _calculate_gained_xp(self, enemy_type: str, enemy_count: int) -> int:
+        base_difficulty_map = {
+            "npc": 8,
+            "enemy": 12,
+            "character": 16,
+        }
+
+        difficulty = base_difficulty_map.get(enemy_type, 10)
+        difficulty += max(0, enemy_count - 1) * 2
+
+        return ExpReward(difficulty).calc_exp_reward()
+
+    def _build_final_stats(self, hero_stats, gained_xp: int):
+        total_xp = hero_stats.exp + gained_xp
+        current_level = hero_stats.level
+        update_data = {"exp": total_xp}
+        level_up = False
+
+        while True:
+            level_manager = LevelManager(current_level)
+            required_xp = level_manager.get_required_total_for_level()
+
+            if total_xp < required_xp:
+                break
+
+            level_up = True
+            total_xp -= required_xp
+            current_level += 1
+
+            next_stats = {}
+
+            for stat, weight in STAT_GROWTH_WEIGHTS.items():
+                current_val = next_stats.get(stat, getattr(hero_stats, stat))
+                next_stats[stat] = level_manager.get_upgrade_value(current_val, weight)
+
+            update_data.update(next_stats)
+            update_data["level"] = current_level
+
+        update_data["exp"] = total_xp
+
+        if level_up:
+            update_data["hp"] = update_data.get("base_hp", hero_stats.base_hp)
+            update_data["energy"] = update_data.get("base_energy", hero_stats.base_energy)
+            update_data["mana"] = update_data.get("base_mana", hero_stats.base_mana)
+
+        return update_data, level_up
+
+    async def _update_hero_in_db(self, hero_id: str, update_data: dict):
         async with get_db() as session:
             stmt = (
                 update(CharacterStats)
-                .where(CharacterStats.character_id == self.hero_id)
+                .where(CharacterStats.character_id == hero_id)
                 .values(**update_data)
             )
             await session.execute(stmt)
+            await session.commit()
 
-    async def _emit_reward_event(self, gained_xp, is_level_up, final_args):
-        """ارسال سیگنال برای نمایش نتایج به کاربر"""
+            query = select(CharacterStats).where(CharacterStats.character_id == hero_id)
+            result = await session.execute(query)
+            return result.scalar_one_or_none()
+
+    async def _emit_reward_event(
+        self,
+        chat_id,
+        message,
+        enemy,
+        hero_stats,
+        gained_xp,
+        level_up,
+        final_stats,
+        you_win,
+        player_id,
+    ):
         await bus.emit(
             "GENERATE_COMBAT_REWARDS",
-            chat_id=self.chat_id,
-            player=self.raw_data.get("player"),
-            xp=0 if is_level_up else gained_xp, # اگر لول آپ شده، تجربه فعلی ریست شده
-            stats=self.hero_stats,
-            message=self.raw_data.get("message"),
-            you_win=self.raw_data.get("winner") == self.raw_data.get("player"),
-            enemy_name=self.raw_data.get("enemy").name,
-            level_up=is_level_up,
-            args=final_args
+            chat_id=chat_id,
+            player_id=player_id,
+            xp=gained_xp,
+            stats=hero_stats,
+            message=message,
+            you_win=you_win,
+            enemy_name=getattr(enemy, "name", "Unknown Enemy"),
+            level_up=level_up,
+            args=final_stats,
         )
 
-# Instance و ثبت شنونده
+
 rewards_processor = CombatRewardsProcessor()
 bus.listen("COMBAT_FINISHED", rewards_processor.handle_combat_end)

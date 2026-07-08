@@ -485,7 +485,7 @@ class Generator:
             f"ویژگی <b>{stat_name}</b> افزایش یافت.\n"
             f"برای این ارتقا، <b>{price} XP</b> از تجربه تو کسر شد.\n\n"
             f"📈 مقدار فعلی {stat_name}:\n"
-            f"<code>{curr}</code>\n\n"
+            f"<code>{int(curr)}</code>\n\n"
             f"هر ارتقا تو را یک قدم به تبدیل شدن به قهرمانی قدرتمندتر نزدیک‌تر می‌کند."
         )
 

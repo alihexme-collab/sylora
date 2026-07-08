@@ -1,162 +1,179 @@
-from .bus import bus
-from database.db_manager import get_db
-from database.model import CharacterStats
-from sqlalchemy import select, update
+from .bus import *
+from database.model import *
+from sqlalchemy import update
+import random as rnd
 
-from game_formulas import LevelManager, ExpReward
-from constants import STAT_GROWTH_WEIGHTS
+class BattleRewards:
+    async def get(self, **data):
+        print(data)
+        self.player=data.get("player")
+        self.enemy=data.get("enemy")
+        self.enemy_type=data.get("enemy_type")
+        self.enemy_count=data.get("enemy_count")
+        self.winner=data.get("winner")
+        self.loser=data.get("loser")
+        self.details=data.get("details")
+        self.hero_stats: CharacterStats=data.get("hero_stats")
+        self.enemy_stats: CharacterStats=data.get("enemy_stats")
+        self.message=data.get("message")
+        self.chat_id=data.get("chat_id")
 
-
-class CombatRewardsProcessor:
-    async def handle_combat_end(self, **data):
-        hero_stats = data.get("hero_stats")
-        chat_id = data.get("chat_id")
-        message = data.get("message")
-        enemy = data.get("enemy")
-        winner = data.get("winner")
-        player_id = data.get("player_id")
-        enemy_type = data.get("enemy_type")
-        enemy_count = max(1, int(data.get("enemy_count", 1) or 1))
-
-        if not hero_stats:
-            return
-
-        hero_id = hero_stats.character_id
-        you_win = winner == "hero"
-
-        if not you_win:
-            await self._emit_reward_event(
-                chat_id=chat_id,
-                message=message,
-                enemy=enemy,
-                hero_stats=hero_stats,
-                gained_xp=0,
-                level_up=False,
-                final_stats={},
-                you_win=False,
-                player_id=player_id,
-            )
-            return
-
-        gained_xp = self._calculate_gained_xp(
-            enemy_type=enemy_type,
-            enemy_count=enemy_count,
-        )
-
-        final_update_data, level_up = self._build_final_stats(
-            hero_stats=hero_stats,
-            gained_xp=gained_xp,
-        )
-
-        await self._update_hero_in_db(
-            hero_id=hero_id,
-            update_data=final_update_data,
-        )
-
-        new_stats = CharacterStats()
-
-        # کپی تمام مقادیر قبلی
-        for column in CharacterStats.__table__.columns:
-            setattr(new_stats, column.name, getattr(hero_stats, column.name))
-
-        # اعمال مقادیر جدید
-        for key, value in final_update_data.items():
-            setattr(new_stats, key, value)
-
-        await self._emit_reward_event(
-            chat_id=chat_id,
-            message=message,
-            enemy=enemy,
-            hero_stats=new_stats,
-            gained_xp=gained_xp,
-            level_up=level_up,
-            final_stats=final_update_data,
-            you_win=True,
-            player_id=player_id,
-        )
-
-    def _calculate_gained_xp(self, enemy_type: str, enemy_count: int) -> int:
-        base_difficulty_map = {
-            "npc": 8,
-            "enemy": 12,
-            "character": 16,
-        }
-
-        difficulty = base_difficulty_map.get(enemy_type, 10)
-        difficulty += max(0, enemy_count - 1) * 2
-
-        return ExpReward(difficulty).calc_exp_reward()
-
-    def _build_final_stats(self, hero_stats, gained_xp: int):
-        total_xp = hero_stats.exp + gained_xp
-        current_level = hero_stats.level
-        update_data = {"exp": total_xp}
-        level_up = False
-
-        while True:
-            level_manager = LevelManager(current_level)
-            required_xp = level_manager.get_required_total_for_level()
-
-            if total_xp < required_xp:
-                break
-
-            level_up = True
-            total_xp -= required_xp
-            current_level += 1
-
-            next_stats = {}
-
-            for stat, weight in STAT_GROWTH_WEIGHTS.items():
-                current_val = next_stats.get(stat, getattr(hero_stats, stat))
-                next_stats[stat] = level_manager.get_upgrade_value(current_val, weight)
-
-            update_data.update(next_stats)
-            update_data["level"] = current_level
-
-        update_data["exp"] = total_xp
-
-        if level_up:
-            update_data["hp"] = update_data.get("base_hp", hero_stats.base_hp)
-            update_data["energy"] = update_data.get("base_energy", hero_stats.base_energy)
-            update_data["mana"] = update_data.get("base_mana", hero_stats.base_mana)
-
-        return update_data, level_up
-
-    async def _update_hero_in_db(self, hero_id: str, update_data: dict):
+        await self.apply()
+    def get_required_total_for_level(self, level):
+        return 100 + (level - 1) * 40
+    
+    async def apply(self):
+        gained_xp = self.calculate_combat_xp()
         async with get_db() as session:
-            stmt = (
-                update(CharacterStats)
-                .where(CharacterStats.character_id == hero_id)
-                .values(**update_data)
+            args = {
+                "exp": self.hero_stats.exp + gained_xp,
+            }
+            level_up =False
+            if self.hero_stats.exp + gained_xp > self.get_required_total_for_level(self.hero_stats.level):
+                level = self.hero_stats.level + 1
+                args.update(
+                    {
+                        "level": level,
+                        "strength": self.hero_stats.strength + 1.5 * level,
+                        "speed": self.hero_stats.speed + 1.5 * level,
+                        "defense": self.hero_stats.defense + 1.5 * level,
+                        "hp": self.hero_stats.base_hp + 5 * level,
+                        "energy": self.hero_stats.base_energy + 5 * level,
+                        "mana": self.hero_stats.base_mana + 5 * level,
+                        "intelligence": self.hero_stats.intelligence + 1* level,
+                        "luck": self.hero_stats.luck +1* level,
+                        "base_hp": self.hero_stats.base_hp + 5 * level,
+                        "base_energy": self.hero_stats.base_energy + 5 * level,
+                        "base_mana": self.hero_stats.base_mana + 5 * level,
+                        "exp": 0,
+                    }
+                )
+                gained_xp = 0
+                level_up = True
+            query = update(
+                CharacterStats
+            ).where(
+                CharacterStats.character_id == self.hero_stats.character_id
+            ).values(
+                **args
             )
-            await session.execute(stmt)
-            await session.commit()
-
-    async def _emit_reward_event(
-        self,
-        chat_id,
-        message,
-        enemy,
-        hero_stats,
-        gained_xp,
-        level_up,
-        final_stats,
-        you_win,
-        player_id,
-    ):
+            await session.execute(query)
         await bus.emit(
             "GENERATE_COMBAT_REWARDS",
-            chat_id=chat_id,
-            player_id=player_id,
+            chat_id=self.chat_id,
+            player=self.player,
             xp=gained_xp,
-            stats=hero_stats,
-            message=message,
-            you_win=you_win,
-            enemy_name=getattr(enemy, "name", "Unknown Enemy"),
+            stats=self.hero_stats,
+            message=self.message,
+            you_win=self.is_hero_winner(),
+            enemy_name=self.enemy.name,
             level_up=level_up,
-            args=final_stats,
+            args=args
         )
 
 
-rewards_processor = CombatRewardsProcessor()
-bus.listen("COMBAT_FINISHED", rewards_processor.handle_combat_end)
+    def is_hero_winner(self):
+        return self.winner == "hero"
+    
+    def calculate_combat_xp(self, base_xp: int = 15) -> int:
+        print("+"*100)
+        result = self.result_multiplier()
+        print(result)
+        effort = self.effort_multiplier()
+        print(effort)
+        performance = self.performance_multiplier()
+        print(performance)
+        duration = self.duration_multiplier()
+        print(duration)
+
+        xp = int(
+            base_xp * 
+            result * 
+            effort * 
+            performance * 
+            duration
+        )
+        print(xp)
+        print("+"*100)
+        if self.is_hero_winner():
+            return max(xp, 5)
+
+        return max(xp, 1)
+
+
+    def result_multiplier(self) -> float:
+        if self.is_hero_winner():
+            return 1.0
+
+        return 0.35
+
+
+    def effort_multiplier(self) -> float:
+        hero_effort = self.hero_effort_score()
+        enemy_damage = self.enemy_damage_score()
+
+        total = hero_effort + enemy_damage
+
+        if total <= 0:
+            return 0.2
+
+        multiplier = 0.6 + min(total / 120, 1.4)
+
+        return min(multiplier, 2.0)
+
+
+    def performance_multiplier(self) -> float:
+        hero_effort = self.hero_effort_score()
+        enemy_damage = self.enemy_damage_score()
+
+        total_activity = hero_effort + enemy_damage
+
+        if total_activity <= 0:
+            return 0.1
+
+        performance_ratio = enemy_damage / max(total_activity, 1)
+
+        if self.is_hero_winner():
+            return 0.8 + min(performance_ratio * 1.4, 1.2)
+
+        return 0.3 + min(performance_ratio * 1.7, 1.1)
+
+
+    def duration_multiplier(self) -> float:
+        rounds = self.details.get("turn", 1)
+
+        if rounds <= 1:
+            return 0.35
+
+        if rounds <= 3:
+            return 0.7
+
+        if rounds <= 7:
+            return 1.0
+
+        return 1.15
+
+
+    def hero_effort_score(self) -> float:
+        hero = self.details.get("Total-hero-costs", {})
+        self.hero = hero
+        return (
+            hero.get("hp", 0) * 1.3 +
+            hero.get("energy", 0) * 0.7 +
+            hero.get("mana", 0) * 0.9
+        )
+
+
+    def enemy_damage_score(self) -> float:
+        enemy = self.details.get("Total-enemy-costs", {})
+
+        return (
+            enemy.get("hp", 0) * 1.2 +
+            enemy.get("energy", 0) * 0.5 +
+            enemy.get("mana", 0) * 0.7
+        )
+
+
+battle_reward = BattleRewards()
+bus.listen("COMBAT_FINISHED", battle_reward.get)
+

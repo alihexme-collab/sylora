@@ -48,16 +48,26 @@ class CombatRewardsProcessor:
             gained_xp=gained_xp,
         )
 
-        updated_stats = await self._update_hero_in_db(
+        await self._update_hero_in_db(
             hero_id=hero_id,
             update_data=final_update_data,
         )
+
+        new_stats = CharacterStats()
+
+        # کپی تمام مقادیر قبلی
+        for column in CharacterStats.__table__.columns:
+            setattr(new_stats, column.name, getattr(hero_stats, column.name))
+
+        # اعمال مقادیر جدید
+        for key, value in final_update_data.items():
+            setattr(new_stats, key, value)
 
         await self._emit_reward_event(
             chat_id=chat_id,
             message=message,
             enemy=enemy,
-            hero_stats=updated_stats or hero_stats,
+            hero_stats=new_stats,
             gained_xp=gained_xp,
             level_up=level_up,
             final_stats=final_update_data,
@@ -121,10 +131,6 @@ class CombatRewardsProcessor:
             )
             await session.execute(stmt)
             await session.commit()
-
-            query = select(CharacterStats).where(CharacterStats.character_id == hero_id)
-            result = await session.execute(query)
-            return result.scalar_one_or_none()
 
     async def _emit_reward_event(
         self,

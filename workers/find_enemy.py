@@ -144,7 +144,7 @@ class FindEnemy:
                 return
 
             rnd.shuffle(candidates)
-            choices = candidates[: rnd.randint(3, 4)]
+            choices = candidates[: rnd.randint(4, 6)]
 
             options = []
             player_power = power_of(player_stats)

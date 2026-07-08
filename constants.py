@@ -9,12 +9,12 @@ STAT_GROWTH_WEIGHTS = {
     "base_mana": 5.0
 }
 
-COMBAT_ACTIONS = {
+COMBAT_ACTIONS = (
     "Hard Fight",
     "Normal Fight",
     "Dodge",
     "Defend",
-}
+)
 
 COMBAT_ACTION_MODIFIERS = {
     "Hard Fight": {

@@ -1,38 +1,47 @@
 class ExpReward:
-    def __init__(self, base_exp: int = 15):
-        self.base = base_exp
+    def __init__(
+        self,
+        base_exp: int = 15,
+        winner: str = "enemy",
+        details: dict | None = None,
+        turn: int = 1,
+        enemy_count: int = 1,
+    ):
+        self.base = max(1, int(base_exp or 15))
+        self.winner = winner
+        self.details = details or {}
+        self.turn = max(1, int(turn or 1))
+        self.enemy_count = max(1, int(enemy_count or 1))
 
-    def calc_exp_reward(self):
+    def calc_exp_reward(self) -> int:
         result = self.result_multiplier()
-
         effort = self.effort_multiplier()
-
         performance = self.performance_multiplier()
-
         duration = self.duration_multiplier()
-
+        count = self.enemy_count_multiplier()
 
         xp = int(
-            self.base * 
-            result * 
-            effort * 
-            performance * 
-            duration
+            self.base
+            * result
+            * effort
+            * performance
+            * duration
+            * count
         )
+
         if self.is_hero_winner():
             return max(xp, 5)
 
         return max(xp, 1)
-    
-    def is_hero_winner(self):
+
+    def is_hero_winner(self) -> bool:
         return self.winner == "hero"
-    
+
     def result_multiplier(self) -> float:
         if self.is_hero_winner():
             return 1.0
 
         return 0.35
-
 
     def effort_multiplier(self) -> float:
         hero_effort = self.hero_effort_score()
@@ -46,7 +55,6 @@ class ExpReward:
         multiplier = 0.6 + min(total / 120, 1.4)
 
         return min(multiplier, 2.0)
-
 
     def performance_multiplier(self) -> float:
         hero_effort = self.hero_effort_score()
@@ -64,9 +72,8 @@ class ExpReward:
 
         return 0.3 + min(performance_ratio * 1.7, 1.1)
 
-
     def duration_multiplier(self) -> float:
-        rounds = self.details.get("turn", 1)
+        rounds = self.turn
 
         if rounds <= 1:
             return 0.35
@@ -79,25 +86,34 @@ class ExpReward:
 
         return 1.15
 
+    def enemy_count_multiplier(self) -> float:
+        """
+        اگر چند دشمن درگیر بوده‌اند، XP کمی بیشتر شود.
+        برای جلوگیری از abuse، رشد را محدود نگه می‌داریم.
+        """
+        if self.enemy_count <= 1:
+            return 1.0
+
+        return min(1.0 + ((self.enemy_count - 1) * 0.25), 2.0)
 
     def hero_effort_score(self) -> float:
-        hero = self.details.get("Total-hero-costs", {})
-        self.hero = hero
-        return (
-            hero.get("hp", 0) * 1.3 +
-            hero.get("energy", 0) * 0.7 +
-            hero.get("mana", 0) * 0.9
-        )
+        hero = self.details.get("Total-hero-costs", {}) or {}
 
+        return (
+            hero.get("hp", 0) * 1.3
+            + hero.get("energy", 0) * 0.7
+            + hero.get("mana", 0) * 0.9
+        )
 
     def enemy_damage_score(self) -> float:
-        enemy = self.details.get("Total-enemy-costs", {})
+        enemy = self.details.get("Total-enemy-costs", {}) or {}
 
         return (
-            enemy.get("hp", 0) * 1.2 +
-            enemy.get("energy", 0) * 0.5 +
-            enemy.get("mana", 0) * 0.7
+            enemy.get("hp", 0) * 1.2
+            + enemy.get("energy", 0) * 0.5
+            + enemy.get("mana", 0) * 0.7
         )
+
 
 
 class LevelManager:

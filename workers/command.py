@@ -5,6 +5,7 @@ from datetime import datetime
 import uuid
 from mtranslate import translate
 from .bus import bus
+from .comment import *
 
 
 class Command:
@@ -31,6 +32,9 @@ class Command:
             case "/start":
                 name = translate(name, "fa")
                 await self.start(chat_id, username, name, message, payload)
+            case "/feedback":
+                await cment.commenting(**data)
+
 
     def extract_referrer_id(self, payload: str | None):
         if not payload:

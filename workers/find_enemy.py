@@ -98,7 +98,7 @@ class FindEnemy:
             candidates = []
 
             # الف) کاندیداهای NPC (فقط برای بازیکنان سطح ۱۰ به بالا)
-            if player_stats.level >= 10:
+            if player_stats.level >= 2:
                 result = await session.execute(
                     select(Npc).where(Npc.npc_id.like(f"npc_{region}_{area}"))
                 )

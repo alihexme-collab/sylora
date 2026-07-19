@@ -64,7 +64,7 @@ class BattleRewards:
     def is_hero_winner(self):
         return self.winner == "hero"
     
-    def calculate_combat_xp(self, base_xp: int = 15) -> int:
+    def calculate_combat_xp(self, base_xp: int = 5) -> int:
         print("+"*100)
         result = self.result_multiplier()
         print(result)
